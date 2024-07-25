@@ -17,27 +17,29 @@
 #define READ_STREAM "stream2"
 
 enum Server_State {
-    ON_LISTEN,
-    ON_SELLER,
-    ON_CUSTOMER,
-    ON_DELIVERY,
+    ON_CONNECTION,  // $ Fase di connessione (1° Fase)
+    ON_LISTEN,  
+    ON_SELLER,      //$ prendiamo gli items dai venditori utilizzando redis per poi salvarli in DB
+    ON_CUSTOMER,    //$ prendiamo gli ordini dei compratori (???)
+    ON_DELIVERY,    //$ inviamo gli ordini ai trasportatori. (???)
 };
 
 class Server {
     private:
         int pid; 
-        Server_State swState = ON_LISTEN;
+        Server_State swState;   // Server Status
         redisContext *c2r;
-        redisReply *reply;
-        std::list<Item> available_Items;
-        bool read = true;       //TODO Valore temporaneo
-        int block = 1000000000; //TODO Valore che indica l'attendere
+        redisReply *reply;  
+        std::list<Item> available_Items;    //TODO - Toglila in seguito non ha senso qui  
+        bool read = true;                   //TODO Valore temporaneo
+        int block = 1000000000;             //TODO Valore che indica l'attendere
 
     // ! Metodi privati
         void changeState(Server_State swNewState);
         std::string getStrState();
         void running();         // Gestione delle funzioni in base allo stato
-        void connection();
+        void connection();      // Funzione utilizzata nella fase di connessione
+        void listen();          // Funzione che gestisce l'ascolto di tutti i canali di comunicazione provenienti dall'esterno
 
     public:
         Server();

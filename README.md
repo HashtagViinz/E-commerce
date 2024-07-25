@@ -1,6 +1,6 @@
 # E-commerce
  E-commerce from sw-eng. project.
 
-Version : 1.0
-In questa versione si ha una prima comunicazione tra server e seller.
-Una semplice comunicazione dove il seller comunica in modo statico prodotto, prezzo e venditore.
+Version : 1.1
+In questa versione è avvenuto il setup del server. Viene effettuato il passaggio tra uno stato all'altro
+utilizzando le funzioni di connessione e listening correttamente.
