@@ -39,7 +39,7 @@ Seller::Seller(int seed, string name){
     this->pid = getpid();
     this->myseed = seed;
 
-    for(int i = 0; i<3; i++){
+    for(int i = 0; i<4; i++){
         this->processing();
     }
 }
@@ -49,10 +49,12 @@ void Seller::processing(){
     switch (seller_State)
     {
     case SELLER_GENERATION:
+        printf("\n\n*---------------------------------------------------------------------*\nSeller: %s\n",sellerName.c_str());
         nextState();                                                // Set next state
         break;
     case LOADING_PRODUCT:
         generateSellerProduct();
+        printProductList();
         nextState();
         break;
     case CONNECTION_SERVER:
@@ -60,6 +62,7 @@ void Seller::processing(){
         nextState();
         break;
     case UPLOADING_PRODUCT:
+        send_products();
         break;
     default:
         break;
@@ -152,39 +155,43 @@ flag:
 }
 
 void Seller::connection(){
-    redisContext *c2r;  
-    redisReply *reply;
-    printf("RUN FROM Seller : %s seed: %d \n",sellerName.c_str(), pid);
+    printf("### CONNECTION FASE Seller : %s \n",sellerName.c_str());
 
     // ? Connection
-    printf("main(): pid %d: user %s: connecting to redis ...\n", pid, sellerName.c_str());
-    c2r = redisConnect("localhost", 6379);
-    printf("main(): pid %d: user %s: connected to redis\n", pid, sellerName.c_str());
+    printf("User %s: connecting to redis ...\n", sellerName.c_str());
+    this->c2r = redisConnect("localhost", 6379);
+    printf("User %s: connected to redis\n\n", sellerName.c_str());
 
     /* Create streams/groups */
     initStreams(c2r, WRITE_STREAM);
 
-
-    // reply = RedisCommand(c2r, "XADD %s * foo mem:%d", WRITE_STREAM, 30);
-    reply = RedisCommand(c2r, "XADD %s * prodotto %s prezzo %d venditore %s", WRITE_STREAM , "Televisione", 20, "Amazon");
-    assertReplyType(c2r, reply, REDIS_REPLY_STRING);
-    printf("main(): pid =%d: Added : Televisione,20,amazon (id: %s)\n", pid, reply->str);
-    freeReplyObject(reply);
-    
 }
 
-
+void Seller::send_products(){
+    //! Protocollo di comunicazione Seller : {Product|cost|Seller}
+    printf("#### \n%s Sending products...\n\n", sellerName.c_str());
+    for(int i=0; i<numRealSellingProducts; i++){         
+        // reply = RedisCommand(c2r, "XADD %s * foo mem:%d", WRITE_STREAM, 30);
+        reply = RedisCommand(c2r, "XADD %s * prod %s price %d seller %s", WRITE_STREAM , sellerProducts[i].c_str(), sellerProductsCost[i], sellerName.c_str());
+        //assertReplyType(c2r, reply, REDIS_REPLY_STRING);
+        assertReply(c2r, reply);
+        printf("    -> Sended item %d : %s %d %s (id: %s)\n", i,sellerProducts[i].c_str(), sellerProductsCost[i], sellerName.c_str(), reply->str);
+        freeReplyObject(reply);
+    }
+    printf("\n\n %s : Sending Done!\n", sellerName.c_str());
+}
 
 
 /* ------------------------------ Stamp Section ----------------------------- */
 
 void Seller::printProductList() {
-    for(int i = 0; i < SELLER_MAX_PRODUCTS; i++){
+    for(int i = 0; i < numRealSellingProducts; i++){
         if (sellerProducts[i] == "") {
             break;
         }
-        printf("%d - %d €: %s\n",i,sellerProductsCost[i],sellerProducts[i].c_str());
+        printf("    %d - %d €: %s\n",i,sellerProductsCost[i],sellerProducts[i].c_str());
     }
+    printf("(NUM_PROD : %d)\n",numRealSellingProducts);
 }
 
 void Seller::toString() {

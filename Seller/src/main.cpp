@@ -1,4 +1,4 @@
-#include<vector>
+
 
 #include "main.h"
 
@@ -8,7 +8,7 @@
 #define DEBUG 1000
 
 #define READ_STREAM "stream1"
-#define WRITE_STREAM "stream2"
+#define WRITE_STREAM "Seller_stream"
 
 using namespace std;
 
@@ -46,12 +46,14 @@ flag2:
     i++;
   }
   printf("\n\n");
-
+  
+  /*
   // ! Mostrami i nomi casuali:
   for(int i = 0; i<10; i++){
     printf("%d - %s\n",i,namesList[i].c_str());
   }
   printf("\n\n");
+  */
 
   // ! Creami Seller con i Nomi trovati
   vector<Seller> sellerList;

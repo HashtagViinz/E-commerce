@@ -5,7 +5,7 @@
 #include <string.h>
 
 // Costruttore : (itemName, itemPrice, itemSeller)
-Item::Item(string itemName, int itemPrice, string itemSeller) {
+Item::Item(const char* itemName, const char* itemPrice, const char* itemSeller) {
     this-> price = itemPrice;
     this->name = itemName;
     this->seller = itemSeller;

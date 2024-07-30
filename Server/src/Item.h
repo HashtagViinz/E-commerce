@@ -7,10 +7,10 @@ using namespace std;
 class Item {
     private:
         string name;
-        int price;
+        string price;
         string seller;
     public:
-        Item(string itemName, int itemPrice, string itemSeller);
+        Item(const char* itemName, const char* itemPrice, const char* itemSeller);
         void getItem();
         std::string getName();
 };

@@ -16,7 +16,7 @@ using namespace std;
 #include "con2redis.h"
 
 #define READ_STREAM "stream1"
-#define WRITE_STREAM "stream2"
+#define WRITE_STREAM "Seller_stream"
 #define SELLER_STATE_LENGHT 4           // ? Dimensione dell'Enum degli Stati di Seller
 #define SELLER_MAX_PRODUCTS 10          // ? Numero massimo di oggetti vendibili dal Seller
 
@@ -34,10 +34,12 @@ class Seller {
         Seller_State seller_State;      // State of the Seller
         string sellerName;              // Name of the
         int numRealSellingProducts = 0; // Number of the real Product that i sell
-        string sellerProducts[10];      // Seller can Sell max 10 items 
-        int sellerProductsCost[10];     // Cost of the i item.
+        string sellerProducts[SELLER_MAX_PRODUCTS];      // Seller can Sell max 10 items 
+        int sellerProductsCost[SELLER_MAX_PRODUCTS];     // Cost of the i item.
         unsigned int myseed;            // random Seed   
+        
         redisContext *c2r;
+        redisReply *reply;
         int block = 1000000000;
 
         // ! Metodi PRIVATE
@@ -46,6 +48,7 @@ class Seller {
         void printProductList();
         void connection();
         void nextState();
+        void send_products();
 
     public:
         Seller();
