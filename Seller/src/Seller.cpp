@@ -131,11 +131,10 @@ flag3:
 
 void Seller::generateSellerProduct() {
     // Generate random number of Seller Products
-    int randNumProducts = (rand() % SELLER_MAX_PRODUCTS) + 1; // Generate a random Number between 1 and 10
     int selectedProducts[SELLER_MAX_PRODUCTS] {-1};
     int i = 0;
 flag:
-    while (i < randNumProducts) {
+    while (i < SELLER_MAX_PRODUCTS) {
         size_t numElements = sizeof(allSellerProducts) / sizeof(allSellerProducts[0]);  // totale numero di elementi vendibili
         int randomIndex = rand() % numElements;             // Numero generato dalla lista di tutti i prodotti
         
@@ -151,7 +150,6 @@ flag:
         sellerProducts[i] = allSellerProducts[randomIndex]; // Questo prodotto è disponibile -> lo inserisco in sellerProducts          
         i++;
     }
-    numRealSellingProducts = randNumProducts;
 }
 
 void Seller::connection(){
@@ -170,7 +168,7 @@ void Seller::connection(){
 void Seller::send_products(){
     //! Protocollo di comunicazione Seller : {Product|cost|Seller}
     printf("#### \n%s Sending products...\n\n", sellerName.c_str());
-    for(int i=0; i<numRealSellingProducts; i++){         
+    for(int i=0; i<SELLER_MAX_PRODUCTS; i++){         
         // reply = RedisCommand(c2r, "XADD %s * foo mem:%d", WRITE_STREAM, 30);
         reply = RedisCommand(c2r, "XADD %s * prod %s price %d seller %s", WRITE_STREAM , sellerProducts[i].c_str(), sellerProductsCost[i], sellerName.c_str());
         //assertReplyType(c2r, reply, REDIS_REPLY_STRING);
@@ -178,6 +176,7 @@ void Seller::send_products(){
         printf("    -> Sended item %d : %s %d %s (id: %s)\n", i,sellerProducts[i].c_str(), sellerProductsCost[i], sellerName.c_str(), reply->str);
         freeReplyObject(reply);
     }
+
     printf("\n\n %s : Sending Done!\n", sellerName.c_str());
 }
 
@@ -185,16 +184,16 @@ void Seller::send_products(){
 /* ------------------------------ Stamp Section ----------------------------- */
 
 void Seller::printProductList() {
-    for(int i = 0; i < numRealSellingProducts; i++){
+    for(int i = 0; i < SELLER_MAX_PRODUCTS; i++){
         if (sellerProducts[i] == "") {
             break;
         }
         printf("    %d - %d €: %s\n",i,sellerProductsCost[i],sellerProducts[i].c_str());
     }
-    printf("(NUM_PROD : %d)\n",numRealSellingProducts);
+    printf("(NUM_PROD : %d)\n",SELLER_MAX_PRODUCTS);
 }
 
 void Seller::toString() {
-    printf("SEED: %u| %s SELL %d PRODUCTS:\n",myseed,sellerName.c_str(),numRealSellingProducts);
+    printf("SEED: %u| %s SELL %d PRODUCTS:\n",myseed,sellerName.c_str(),SELLER_MAX_PRODUCTS);
     printProductList();
 }

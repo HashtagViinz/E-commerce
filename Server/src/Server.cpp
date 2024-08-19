@@ -9,7 +9,7 @@ Server::Server() {
     
     printf("Hello I'm Alive :D\n\n");
 
-    for(int i = 0; i<2; i++){
+    for(int i = 0; i<3; i++){
         this->running();
     }
 
@@ -26,16 +26,14 @@ void Server::running(){
     switch (swState) {
         case ON_CONNECTION:
             connection();
-            changeState(ON_LISTEN);     // $ Siamo pronti per ascoltare
-            break;
-        case ON_LISTEN:
-            listen();
+            changeState(ON_SELLER);     // $ Siamo pronti per ascoltare
             break;
         case ON_SELLER:
+            listenSellers();
+            changeState(ON_CUSTOMER);    // $ Ascoltiamo i customer
             break;
         case ON_CUSTOMER:
-            break;
-        case ON_DELIVERY:
+            listenCustomer();
             break;
         default:
             break;
@@ -52,14 +50,10 @@ std::string Server::getStrState() {
     switch (swState) {
         case ON_CONNECTION:
             return "ON CONNECTION";
-        case ON_LISTEN:
-            return "running : ON_LISTEN";
         case ON_SELLER:
             return "ON_SELLER";
         case ON_CUSTOMER:
             return "ON_CUSTOMER";
-        case ON_DELIVERY:
-            return "ON_DELIVERY";
         default:
             return "Unknown state";
     }
@@ -73,21 +67,33 @@ void Server::connection(){
     printf("Server ON : Connection(): connecting to redis ...| pid: %d - User: %s\n", getPid(), "Server ");
     this->c2r = redisConnect("localhost", 6379);
     printf("Server ON : Connection(): connected to redis | pid: %d - User: %s\n", getPid(), "Server");
-    
+
+    // Pulizia Canale di comunicazione
+    reply = RedisCommand(c2r, "DEL %s", READ_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+
     /* Create streams/groups */
     initStreams(this->c2r, READ_STREAM);
 }
 
 // Funzione che gestisce la fase di listen. La comunicazione può avvenire da tutti i canali di comunicazione
-void Server::listen(){
+void Server::listenSellers(){
   
     //$ info mex
     char product[100];      // Prodotto
     char price[4];          // prezzo
     char seller[100];       // valori azienda
-   
-    printf("SERVER_ON_LISTEN() pid : %d stream: %s \n", pid, READ_STREAM);
-    while(read){
+    int i = 0;
+
+    printf("SERVER ON LISTEN FOR SELLER() pid : %d stream: %s \n", pid, READ_STREAM);
+    while(i<SERVER_MAX_ITEMS){
+        
+        // Pulisco i valori dei buffer
+        memset(product, 0, sizeof(product));
+        memset(price, 0, sizeof(price));
+        memset(seller, 0, sizeof(seller));
+
         reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
                          block, READ_STREAM);
         assertReply(c2r, reply);    // Verifica errori nella comunicazione
@@ -101,12 +107,63 @@ void Server::listen(){
 
         //dumpReply(reply, 0);
         freeReplyObject(reply);
+        i++;
     }
+
+    printf("Product acquisition completed!");
 }
 
+// Funzione che gestisce la comunicazione fra Customer e Server
+void Server::listenCustomer(){
+    char request[10];
+
+    // delete stream if it exists
+    reply = RedisCommand(c2r, "DEL %s", CUST_R_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+
+    reply = RedisCommand(c2r, "DEL %s", CUST_W_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+    
+     /* Create streams/groups */
+    initStreams(c2r, CUST_R_STREAM);
+    initStreams(c2r, CUST_W_STREAM);
+
+    // $ Il server aspetta i Customer per gli ordini
+    printf("SERVER ON LISTEN FOR CUSTOMER() pid : %d stream: %s \n", pid, CUST_R_STREAM);
+    reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
+                         block, CUST_R_STREAM);
+    assertReply(c2r, reply);    // Verifica errori nella comunicazione
+    
+    ReadStreamMsgVal(reply, 0, 0, 1, request);
+    freeReplyObject(reply);
+
+    // IL messaggio contiene una "RequestProducts"richista per avere tutti i prodotti in vendita
+    if(strcmp("rp", request) == 0){
+        printf("Sending Catalog...\n");
+        for (Item i : available_Items){
+
+            // Recupera i valori dai getter
+            string name = i.getName();
+            string price = i.getPrice();
+            string seller = i.getSeller();
+
+            reply = RedisCommand(c2r, "XADD %s * prod %s price %d seller %s", CUST_R_STREAM , name, price, seller);
+            assertReply(c2r, reply);
+            printf("Server sta mandando : %s %s %s\n", name.c_str(), price.c_str(), seller.c_str());
+            freeReplyObject(reply);
+        }
+    }
+
+    //printReply(reply);
+    //freeReplyObject(reply);
+}
+
+
 //TODO - Elimina questa funzione
-/* 
-void Server::printReply(redisReply *reply, int level = 0) {
+
+void Server::printReply(redisReply *reply, int level) {
     if (reply == nullptr) {
         return;
     }
@@ -141,7 +198,7 @@ void Server::printReply(redisReply *reply, int level = 0) {
             break;
     }
 }
-*/
+
 
 
 

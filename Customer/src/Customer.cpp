@@ -1,4 +1,5 @@
 #include "Customer.h"
+#include <string.h>
 
 
 /* ------------------------------- Costruttore ------------------------------ */
@@ -8,7 +9,8 @@ Customer::Customer(int seed, int ID){
     this->myseed = seed;
     this->ID = ID;
 
-    for(int i=0; i<2; i++){
+    for(int i=0; i<3; i++){
+        getStrState();
         elaboration();
     }
 }
@@ -58,7 +60,7 @@ void Customer::nextState() {
 }
 
 void Customer::connectToServer(){
-    printf("### CONNECTION FASE Customer : %d\n",ID);
+    printf("### CONNECTION_PHASE Customer : %d\n",ID);
 
     // ? Connection
     printf("User %d: connecting to redis ...\n", ID);
@@ -69,6 +71,55 @@ void Customer::connectToServer(){
     initStreams(c2r, WRITE_STREAM);
 }
 
-void requestArticles(){
-    
+void Customer::requestArticles(){
+    //$ info mex
+    char product[100];      // Prodotto
+    char price[4];          // prezzo
+    char seller[100];       // valori azienda
+
+    //! richiesta al server dei prodotti disponibili
+    reply = RedisCommand(c2r, "XADD %s * type %s", WRITE_STREAM, "rp"); // rp = "RequestProducts"
+    assertReply(c2r, reply);
+    printf("CUSTOMER:(%d)---->SERVER : %s\n",ID,reply->str);
+    freeReplyObject(reply);
+
+    for(int i=0; i<ITEMS_SHAREABLE; i++){
+
+        reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
+                         block, WRITE_STREAM);
+        assertReply(c2r, reply);    // Verifica errori nella comunicazione
+        
+        //! Server risponde
+        printf("CUSTOMER:(%d)<----SERVER : %s\n",ID, reply->str);
+        printf("CIAO");
+
+        ReadStreamMsgVal(reply, 0, 0, 1, product);
+        ReadStreamMsgVal(reply, 0, 0, 3, price);
+        ReadStreamMsgVal(reply, 0, 0, 5, seller);
+        
+        //TODO Inserisci queste info in un ITEM e devi controllare che funziona la connessione
+        addItem(Article(product, price, seller));
+        printf("Numero elementi nel Catalogo: %ld",getItemCount());
+
+        // Pulisco i valori dei buffer
+        memset(product, 0, sizeof(product));
+        memset(price, 0, sizeof(price));
+        memset(seller, 0, sizeof(seller));
+    }   
+
+    // Scegliamo un articolo randomico
+    // aspetta che l'ordine arrivi
+    // Con probabilità 0.4 richiede un altro articolo
+    // ...
+    // ! Muore
+}
+
+
+
+void Customer::addItem(Article article) {
+    catalog.push_back(article);
+}
+
+size_t Customer::getItemCount() const {
+    return catalog.size();
 }

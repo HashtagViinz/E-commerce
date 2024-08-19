@@ -33,7 +33,6 @@ class Seller {
         int pid;
         Seller_State seller_State;      // State of the Seller
         string sellerName;              // Name of the
-        int numRealSellingProducts = 0; // Number of the real Product that i sell
         string sellerProducts[SELLER_MAX_PRODUCTS];      // Seller can Sell max 10 items 
         int sellerProductsCost[SELLER_MAX_PRODUCTS];     // Cost of the i item.
         unsigned int myseed;            // random Seed   

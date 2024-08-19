@@ -19,11 +19,11 @@ int main() {
 #endif
 
   Server sw;
-  Item item1("Televisione",20,"Amazon");
-  Item item2("Scaffale", 50, "Ebay");
+  //Item item1("Televisione",20,"Amazon");
+  //Item item2("Scaffale", 50, "Ebay");
 
-  sw.addItem(item1);
-  sw.addItem(item2);
+  //sw.addItem(item1);
+  //sw.addItem(item2);
 
   //sw.getAvailable_Items();
 }

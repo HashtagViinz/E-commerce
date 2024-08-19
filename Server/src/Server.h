@@ -12,17 +12,19 @@
 
 // Comunicazione redis
 #include "con2redis.h"          //Includiamo l'interfaccia di con2redis
+
 #include "main.h"
 #include "Item.h"
 
+#define SERVER_MAX_ITEMS 100
 #define READ_STREAM "Seller_stream"
+#define CUST_W_STREAM "Customer_w_stream"   // Server scrive in questo canale
+#define CUST_R_STREAM "Customer_r_stream"   // Server ascolta in questo canale
 
 enum Server_State {
     ON_CONNECTION,  // $ Fase di connessione (1° Fase)
-    ON_LISTEN,  
     ON_SELLER,      //$ prendiamo gli items dai venditori utilizzando redis per poi salvarli in DB
     ON_CUSTOMER,    //$ prendiamo gli ordini dei compratori (???)
-    ON_DELIVERY,    //$ inviamo gli ordini ai trasportatori. (???)
 };
 
 class Server {
@@ -40,8 +42,10 @@ class Server {
         std::string getStrState();
         void running();         // Gestione delle funzioni in base allo stato
         void connection();      // Funzione utilizzata nella fase di connessione
-        void listen();          // Funzione che gestisce l'ascolto di tutti i canali di comunicazione provenienti dall'esterno
+        void listenSellers();          // Funzione che gestisce l'ascolto di tutti i canali di comunicazione provenienti dall'esterno
+        void listenCustomer();  // Funzione chiamata da listen() serve per gestire le richieste dei customer
         size_t getItemCount() const;
+
 
     public:
         Server();
@@ -50,8 +54,8 @@ class Server {
         void getAvailable_Items();
         
         
-        
-        //TODO Elimina questa funzione: static void printReply(redisReply *reply, int level = 0); // Argomento predefinito qui
+        //TODO Elimina questa Funzione
+        static void printReply(redisReply *reply, int level = 0); // Argomento predefinito qui
 
 };
 
