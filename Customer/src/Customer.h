@@ -5,6 +5,7 @@
 #include "../../global.h"
 #include "Article.h"
 #include <string>
+#include <iostream>
 
 
 #define WRITE_STREAM "Customer_r_stream"    // Server ascolta in questo canale 
@@ -49,6 +50,8 @@ class Customer{
 
     public:
         Customer(int seed, int ID);
+        //TODO Elimina questa Funzione
+        static void printReply(redisReply *reply, int level = 0); // Argomento predefinito qui
 
 
 };

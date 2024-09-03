@@ -90,23 +90,22 @@ void Customer::requestArticles(){
         assertReply(c2r, reply);    // Verifica errori nella comunicazione
         
         //! Server risponde
-        printf("CUSTOMER:(%d)<----SERVER : %s\n",ID, reply->str);
-        printf("CIAO");
-
+        printf("CUSTOMER:(%d)<----SERVER : %s |",ID, reply->str);
+        printReply(reply);
         ReadStreamMsgVal(reply, 0, 0, 1, product);
         ReadStreamMsgVal(reply, 0, 0, 3, price);
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
         
         //TODO Inserisci queste info in un ITEM e devi controllare che funziona la connessione
+        printf("TOT COLLEZZIONE ATTUALE: %ld :: last recived:%s ::(%d)\n",getItemCount(), seller , i);
         addItem(Article(product, price, seller));
-        printf("Numero elementi nel Catalogo: %ld",getItemCount());
 
         // Pulisco i valori dei buffer
         memset(product, 0, sizeof(product));
         memset(price, 0, sizeof(price));
         memset(seller, 0, sizeof(seller));
     }   
-
+    printf("\nSono fuori il canale di comunicazione");
     // Scegliamo un articolo randomico
     // aspetta che l'ordine arrivi
     // Con probabilità 0.4 richiede un altro articolo
@@ -114,7 +113,42 @@ void Customer::requestArticles(){
     // ! Muore
 }
 
+//TODO - Elimina questa funzione
+void Customer::printReply(redisReply *reply, int level) {
+    if (reply == nullptr) {
+        return;
+    }
+    
+    // Indentation for readability
+    std::string indent(level * 2, ' ');
 
+    switch (reply->type) {
+        case REDIS_REPLY_STRING:
+            std::cout << indent << "STRING: " << reply->str << std::endl;
+            break;
+        case REDIS_REPLY_ARRAY:
+            std::cout << indent << "ARRAY of " << reply->elements << " elements:" << std::endl;
+            for (size_t i = 0; i < reply->elements; ++i) {
+                printReply(reply->element[i], level + 1);
+            }
+            break;
+        case REDIS_REPLY_INTEGER:
+            std::cout << indent << "INTEGER: " << reply->integer << std::endl;
+            break;
+        case REDIS_REPLY_NIL:
+            std::cout << indent << "NIL" << std::endl;
+            break;
+        case REDIS_REPLY_STATUS:
+            std::cout << indent << "STATUS: " << reply->str << std::endl;
+            break;
+        case REDIS_REPLY_ERROR:
+            std::cout << indent << "ERROR: " << reply->str << std::endl;
+            break;
+        default:
+            std::cout << indent << "UNKNOWN TYPE: " << reply->type << std::endl;
+            break;
+    }
+}
 
 void Customer::addItem(Article article) {
     catalog.push_back(article);
