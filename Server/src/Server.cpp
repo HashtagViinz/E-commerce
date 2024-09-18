@@ -149,7 +149,7 @@ void Server::listenCustomer(){
             string price = i.getPrice();
             string seller = i.getSeller();
 
-            reply = RedisCommand(c2r, "XADD %s * prod %s price %d seller %s", CUST_R_STREAM , name, price, seller);
+            reply = RedisCommand(c2r, "XADD %s * prod %s price %d seller %s", CUST_R_STREAM ,  name.c_str(), price.c_str(), seller.c_str());
             assertReply(c2r, reply);
             printf("Server sta mandando : %s %s %s\n", name.c_str(), price.c_str(), seller.c_str());
             freeReplyObject(reply);

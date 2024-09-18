@@ -91,13 +91,14 @@ void Customer::requestArticles(){
         
         //! Server risponde
         printf("CUSTOMER:(%d)<----SERVER : %s |",ID, reply->str);
-        printReply(reply);
+        //printReply(reply);
         ReadStreamMsgVal(reply, 0, 0, 1, product);
         ReadStreamMsgVal(reply, 0, 0, 3, price);
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
         
         //TODO Inserisci queste info in un ITEM e devi controllare che funziona la connessione
-        printf("TOT COLLEZZIONE ATTUALE: %ld :: last recived:%s ::(%d)\n",getItemCount(), seller , i);
+        printf("(%ld) Last recived: (%s,%s,%s)\n", getItemCount(), seller, price, product);
+        
         addItem(Article(product, price, seller));
 
         // Pulisco i valori dei buffer
@@ -112,6 +113,8 @@ void Customer::requestArticles(){
     // ...
     // ! Muore
 }
+
+//VERSION 13/09
 
 //TODO - Elimina questa funzione
 void Customer::printReply(redisReply *reply, int level) {
