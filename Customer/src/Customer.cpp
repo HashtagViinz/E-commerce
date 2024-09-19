@@ -1,6 +1,7 @@
 #include "Customer.h"
 #include <string.h>
 
+//VERSION 14/09
 
 /* ------------------------------- Costruttore ------------------------------ */
 Customer::Customer(int seed, int ID){
@@ -8,8 +9,10 @@ Customer::Customer(int seed, int ID){
     this->pid = getpid();
     this->myseed = seed;
     this->ID = ID;
+    srand(myseed);
 
-    for(int i=0; i<3; i++){
+
+    for(int i=0; i<20; i++){ 
         getStrState();
         elaboration();
     }
@@ -26,11 +29,24 @@ void Customer::elaboration(){
         nextState();
         break;
     case ORDER_PHASE:
+        printf("\n\n[REQUESTED] : CATALOGO\n");
+
         requestArticles();
+        printf("[RECEIVED] : CATALOGO\n");
+        nextState();
+        break;
+    case MAKE_DECISION_PHASE:
+        makeDecision();         // gestione probabilità di morte
+        break;
+    case CHOICE_PHASE:
+        choose_item();
         break;
     case WAITING_PHASE:
+        printf("COMPA' S'é ASPETTAN\n");
+        changeState(SATISFACTION_PHASE);
         break;
     case SATISFACTION_PHASE:
+        printf("SONO SODDISFATTO\n");
         break;
     default:
         break;
@@ -45,6 +61,10 @@ std::string Customer::getStrState() {
             return "SERVER_CONNECTION";
         case ORDER_PHASE:
             return "ORDER_PHASE";
+        case MAKE_DECISION_PHASE:
+            return "MAKE_DECISION_PHASE";
+        case CHOICE_PHASE:
+            return "CHOICE_PHASE";
         case WAITING_PHASE:
             return "WAITING_PHASE";
         case SATISFACTION_PHASE:
@@ -59,6 +79,11 @@ void Customer::nextState() {
     customer_State = static_cast<Customer_State>((static_cast<int>(customer_State)+1)%SELLER_STATE_LENGHT);
 }
 
+// Funzione che ci permette di andare allo stato richiesto
+void Customer::changeState(Customer_State swNewState){
+    this->customer_State = swNewState;
+}
+
 void Customer::connectToServer(){
     printf("### CONNECTION_PHASE Customer : %d\n",ID);
 
@@ -67,8 +92,23 @@ void Customer::connectToServer(){
     this->c2r = redisConnect("localhost", 6379);
     printf("User %d: connected to redis\n\n", ID);
 
+    // ? Pulizia canale di comunicazione
+    reply = RedisCommand(c2r, "DEL %s", WRITE_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+
+    reply = RedisCommand(c2r, "DEL %s", CTRL);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+
+    reply = RedisCommand(c2r, "DEL %s", OBJ_CH);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+
     /* Create streams/groups */
     initStreams(c2r, WRITE_STREAM);
+    initStreams(c2r, CTRL);
+    initStreams(c2r, OBJ_CH);
 }
 
 void Customer::requestArticles(){
@@ -77,48 +117,51 @@ void Customer::requestArticles(){
     char price[4];          // prezzo
     char seller[100];       // valori azienda
 
-    //! richiesta al server dei prodotti disponibili
-    reply = RedisCommand(c2r, "XADD %s * type %s", WRITE_STREAM, "rp"); // rp = "RequestProducts"
-    assertReply(c2r, reply);
-    printf("CUSTOMER:(%d)---->SERVER : %s\n",ID,reply->str);
-    freeReplyObject(reply);
-
+    //! Customer in ascolto del Server
     for(int i=0; i<ITEMS_SHAREABLE; i++){
-
-        reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
-                         block, WRITE_STREAM);
-        assertReply(c2r, reply);    // Verifica errori nella comunicazione
         
-        //! Server risponde
-        printf("CUSTOMER:(%d)<----SERVER : %s |",ID, reply->str);
-        //printReply(reply);
-        ReadStreamMsgVal(reply, 0, 0, 1, product);
-        ReadStreamMsgVal(reply, 0, 0, 3, price);
-        ReadStreamMsgVal(reply, 0, 0, 5, seller);
-        
-        //TODO Inserisci queste info in un ITEM e devi controllare che funziona la connessione
-        printf("(%ld) Last recived: (%s,%s,%s)\n", getItemCount(), seller, price, product);
-        
-        addItem(Article(product, price, seller));
-
         // Pulisco i valori dei buffer
         memset(product, 0, sizeof(product));
         memset(price, 0, sizeof(price));
         memset(seller, 0, sizeof(seller));
-    }   
-    printf("\nSono fuori il canale di comunicazione");
-    // Scegliamo un articolo randomico
-    // aspetta che l'ordine arrivi
-    // Con probabilità 0.4 richiede un altro articolo
-    // ...
-    // ! Muore
+
+        reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
+                         block, WRITE_STREAM);
+        assertReply(c2r, reply);    // Verifica errori nella comunicazione
+
+        ReadStreamMsgVal(reply, 0, 0, 1, product);
+        ReadStreamMsgVal(reply, 0, 0, 3, price);
+        ReadStreamMsgVal(reply, 0, 0, 5, seller);
+
+        //printf("Ricevuto (%d) - (%s, %s, %s)\n",i,product, price, seller);
+
+        freeReplyObject(reply);
+        addItem(Article(product, price, seller));   //Aggiungiamo gli articoli al catalogo dell'utente
+    }
 }
 
-//VERSION 13/09
+
+// Funzione che sceglie un articolo dal catalogo e lo spedisce al server
+void Customer::choose_item(){
+    if (orderCounter == MAX_ORDER){             //Ne ho mandati già 4 allora dico al server che non devo mandarne più
+        sendNoObj();
+        changeState(WAITING_PHASE);
+    }else if(orderCounter < MAX_ORDER){         // Se non ne ho mandati ancora 4 allora lo genero e lo spedisco
+        Article art = catalog[rand() % 100 +1];    
+        reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());  //? so - Sending Obj
+        assertReply(c2r, reply);
+        printf("#Ordine Spedito: (%s,%s,%s)\n",art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());
+
+        orderCounter++;
+        changeState(MAKE_DECISION_PHASE);   // Vediamo se dobbiamo fare un'altro ordine
+    }
+}
+
+/* ------------------------------- Utilitarie ------------------------------- */
 
 //TODO - Elimina questa funzione
 void Customer::printReply(redisReply *reply, int level) {
-    if (reply == nullptr) {
+    if (reply == nullptr) { 
         return;
     }
     
@@ -151,6 +194,31 @@ void Customer::printReply(redisReply *reply, int level) {
             std::cout << indent << "UNKNOWN TYPE: " << reply->type << std::endl;
             break;
     }
+}
+
+// Questa funzione ci indirizza randomicamente, con probabilità non nulla, in una delle due possibili scelte.
+void Customer::makeDecision(){
+    if(orderCounter < MAX_ORDER and (rand() %10 +1) > NOT_ORDER_PROB){   //controllo che non abbiamo mandato già 4 pacchetti e che la probabilità vada a favore della spedizione
+        sendObj();          
+        changeState(CHOICE_PHASE);
+    } else {
+        sendNoObj();
+        changeState(WAITING_PHASE);
+    }
+}
+
+// Funzione che manda una comunicazione di controllo 'so'
+void Customer::sendObj(){
+    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "so");  //? so - Sending Obj
+    assertReply(c2r, reply);
+    freeReplyObject(reply);
+}
+
+// Funzione che manda una comunicazione di controllo 'no'
+void Customer::sendNoObj(){
+    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "no");  //? no - No Obj
+    assertReply(c2r, reply);
+    freeReplyObject(reply);
 }
 
 void Customer::addItem(Article article) {

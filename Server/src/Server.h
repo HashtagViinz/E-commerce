@@ -17,6 +17,8 @@
 #include "Item.h"
 
 #define SERVER_MAX_ITEMS 100
+#define CTRL "Control_Channel"
+#define OBJ_CH "Object_Channel"
 #define READ_STREAM "Seller_stream"
 #define CUST_W_STREAM "Customer_w_stream"   // Server scrive in questo canale
 #define CUST_R_STREAM "Customer_r_stream"   // Server ascolta in questo canale
@@ -36,6 +38,7 @@ class Server {
         vector<Item> available_Items;       //TODO - Toglila in seguito non ha senso qui  
         bool read = true;                   //TODO Valore temporaneo
         int block = 1000000000;             //TODO Valore che indica l'attendere
+        int timedBlock = 10000;             // ? Utilizzato per temporizzare l'attesa 
 
     // ! Metodi privati
         void changeState(Server_State swNewState);

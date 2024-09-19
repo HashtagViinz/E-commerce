@@ -23,12 +23,15 @@ int main() {
   unsigned int seed = std::rand();
 
   // Generiamo un ID per i Customer
-  int tmpID;
+  int tmpID=1;
+  /*
   vector<Customer> customers;
   for(int j=0; j<CUSTOMER_NUM; j++){
     customers.push_back(Customer(seed,tmpID)); 
     tmpID++;
-  }
+  }*/
+  Customer customer(seed,tmpID);
+
   // TODO CHECK se funziona tutto
 
 }

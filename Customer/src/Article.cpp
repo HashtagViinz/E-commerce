@@ -8,7 +8,6 @@ Article::Article(const char* itemName, const char* itemPrice, const char* itemSe
     this-> price = itemPrice;
     this->name = itemName;
     this->seller = itemSeller;
-    getItem();
 }
 
 void Article::getItem() {
