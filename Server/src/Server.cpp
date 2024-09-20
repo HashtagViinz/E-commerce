@@ -9,7 +9,7 @@ Server::Server() {
     
     printf("Hello I'm Alive :D\n\n");
 
-    for(int i = 0; i<3; i++){
+    for(int i = 0; i<4; i++){
         this->running();
     }
 
@@ -107,18 +107,20 @@ void Server::listenSellers(){
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
 
         addItem(Item(product, price, seller));
-        printf("(#!!#) Saved (%ld) || Item intercettato : (%s|%s|%s)\n", getItemCount(), product, price, seller);
+        //printf("(#!!#) Saved (%ld) || Item intercettato : (%s|%s|%s)\n", getItemCount(), product, price, seller);
 
         //dumpReply(reply, 0);
         freeReplyObject(reply);
         i++;
     }
-    printf("Product acquisition completed!");
+    printf("Product acquisition completed!\n");
 }
 
 // Funzione che gestisce la comunicazione fra Customer e Server
 void Server::listenCustomer(){
     bool wait = true;
+    char msg[10];                       // Valore messaggio richiesta ("so","no")
+
     //? delete stream if it exists
     reply = RedisCommand(c2r, "DEL %s", CUST_R_STREAM);
     assertReply(c2r, reply);
@@ -129,18 +131,30 @@ void Server::listenCustomer(){
 
     //! Mandiamo il catalogo al Seller
     printf("Sending Catalog...\n");
-    for (Item i : available_Items){
 
-        // Recupera i valori dai getter
-        string name = i.getName();
-        string price = i.getPrice();
-        string seller = i.getSeller();
+    reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
+                            timedBlock, CTRL);
+    assertReply(c2r, reply);                // Verifica errori nella comunicazione
+    memset(msg, 0, sizeof(msg));            // Pulisco i valori dei buffer
+    ReadStreamMsgVal(reply, 0, 0, 1, msg);  // Leggo il valore 
+    freeReplyObject(reply);
 
-        reply = RedisCommand(c2r, "XADD %s * prod %s price %s seller %s", CUST_R_STREAM ,  name.c_str(), price.c_str(), seller.c_str());
-        assertReply(c2r, reply);
-        printf("Server sta mandando : %s %s %s\n", name.c_str(), price.c_str(), seller.c_str());
-        freeReplyObject(reply);
+    if(strcmp(msg, "ro") == 0){             // 'ro' - requesting object
+        printf("Richiesta Accettata... Inizio a mandare il Catalogo...\n");
+        for (Item i : available_Items){
+
+            // Recupera i valori dai getter
+            string name = i.getName();
+            string price = i.getPrice();
+            string seller = i.getSeller();
+
+            reply = RedisCommand(c2r, "XADD %s * prod %s price %s seller %s", CUST_R_STREAM ,  name.c_str(), price.c_str(), seller.c_str());
+            assertReply(c2r, reply);
+            //printf("Server sta mandando : %s %s %s\n", name.c_str(), price.c_str(), seller.c_str());
+            freeReplyObject(reply);
+        }
     }
+    printf("Catalog sended...\n");
 
     // ! ASPETTIAMO ORDINI
 
@@ -148,7 +162,6 @@ void Server::listenCustomer(){
     char product[100];                  // Prodotto
     char price[4];                      // prezzo
     char seller[100];                   // valori azienda
-    char msg[10];                       // Valore messaggio richiesta ("so","no")
     
     while(wait){
         
@@ -169,7 +182,7 @@ void Server::listenCustomer(){
             memset(seller, 0, sizeof(seller));
 
             reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
-                            block, OBJ_CH);
+                            timedBlock, OBJ_CH);
             assertReply(c2r, reply);  // Verifica errori nella comunicazione
 
             //printReply(reply);
@@ -188,7 +201,7 @@ void Server::listenCustomer(){
     }
 }
 
-
+/* ------------------------------- Utilitarie ------------------------------- */
 
 //TODO - Elimina questa funzione
 void Server::printReply(redisReply *reply, int level) {

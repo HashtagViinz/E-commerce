@@ -48,7 +48,7 @@ class Server {
         void listenSellers();          // Funzione che gestisce l'ascolto di tutti i canali di comunicazione provenienti dall'esterno
         void listenCustomer();  // Funzione chiamata da listen() serve per gestire le richieste dei customer
         size_t getItemCount() const;
-
+        void cleanCh();         // Funzione che pulisce i canali;
 
     public:
         Server();

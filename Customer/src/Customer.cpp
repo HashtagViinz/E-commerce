@@ -9,10 +9,13 @@ Customer::Customer(int seed, int ID){
     this->pid = getpid();
     this->myseed = seed;
     this->ID = ID;
-    srand(myseed);
-
+    srand((seed^ID));
+    printf("----------------------: USER: %d | seed: %d\n", ID, seed);
 
     for(int i=0; i<20; i++){ 
+        if(getStrState()=="SATISFACTION_PHASE"){
+            break;
+        }
         getStrState();
         elaboration();
     }
@@ -29,8 +32,7 @@ void Customer::elaboration(){
         nextState();
         break;
     case ORDER_PHASE:
-        printf("\n\n[REQUESTED] : CATALOGO\n");
-
+        printf("\n[REQUESTED] : CATALOGO\n");
         requestArticles();
         printf("[RECEIVED] : CATALOGO\n");
         nextState();
@@ -117,6 +119,7 @@ void Customer::requestArticles(){
     char price[4];          // prezzo
     char seller[100];       // valori azienda
 
+    sendReqObj();           // ! Richiediamo (tramite CTRL) al Server di Mandarci il Catalogo
     //! Customer in ascolto del Server
     for(int i=0; i<ITEMS_SHAREABLE; i++){
         
@@ -209,6 +212,7 @@ void Customer::makeDecision(){
 
 // Funzione che manda una comunicazione di controllo 'so'
 void Customer::sendObj(){
+    printf("SEND on CTRL : OBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "so");  //? so - Sending Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
@@ -216,7 +220,16 @@ void Customer::sendObj(){
 
 // Funzione che manda una comunicazione di controllo 'no'
 void Customer::sendNoObj(){
+    printf("SEND on CTRL : NOOBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "no");  //? no - No Obj
+    assertReply(c2r, reply);
+    freeReplyObject(reply);
+}
+
+// Funzione che manda una comunicazione di controllo 'ro' Requesting Object - Richiesta Catalogo
+void Customer::sendReqObj(){
+    printf("SEND on CTRL : REQOBJ\n");
+    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "ro");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
 }

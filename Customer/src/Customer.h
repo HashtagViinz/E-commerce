@@ -57,9 +57,10 @@ class Customer{
         void makeDecision();
         void choose_item();
         size_t getItemCount() const;
+        
         void sendObj();
         void sendNoObj();
-        
+        void sendReqObj();
 
     public:
         Customer(int seed, int ID);
