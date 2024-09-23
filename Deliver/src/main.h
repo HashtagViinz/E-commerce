@@ -6,14 +6,9 @@
 #include <unistd.h>
 #include <time.h>
 #include <ctime>
-#include <vector>
+#include<vector>
 
-
-
-#include "con2redis.h"
-#include "Customer.h"
-
-#define CUSTOMER_NUM 5           // ? Numero di Customer che genereremo
+#include "Deliver.h"
 
 
 int micro_sleep(long usec);

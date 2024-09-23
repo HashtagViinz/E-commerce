@@ -43,6 +43,7 @@ class Customer{
         redisContext *c2r;
         redisReply *reply;
         int block = 1000000000;             //TODO Valore che indica l'attendere
+        int timedBlock = 10000;             // ? Utilizzato per temporizzare l'attesa 
 
 
     //! Funzioni private

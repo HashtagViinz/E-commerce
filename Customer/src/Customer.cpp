@@ -44,11 +44,11 @@ void Customer::elaboration(){
         choose_item();
         break;
     case WAITING_PHASE:
-        printf("COMPA' S'é ASPETTAN\n");
+        printf("# %s",getStrState().c_str());
+        redisFree(c2r);         // Libera la connessione a Redis
         changeState(SATISFACTION_PHASE);
         break;
     case SATISFACTION_PHASE:
-        printf("SONO SODDISFATTO\n");
         break;
     default:
         break;
@@ -98,14 +98,17 @@ void Customer::connectToServer(){
     reply = RedisCommand(c2r, "DEL %s", WRITE_STREAM);
     assertReply(c2r, reply);
     dumpReply(reply, 0);
+    freeReplyObject(reply);
 
     reply = RedisCommand(c2r, "DEL %s", CTRL);
     assertReply(c2r, reply);
     dumpReply(reply, 0);
+    freeReplyObject(reply);
 
     reply = RedisCommand(c2r, "DEL %s", OBJ_CH);
     assertReply(c2r, reply);
     dumpReply(reply, 0);
+    freeReplyObject(reply);
 
     /* Create streams/groups */
     initStreams(c2r, WRITE_STREAM);
@@ -122,14 +125,9 @@ void Customer::requestArticles(){
     sendReqObj();           // ! Richiediamo (tramite CTRL) al Server di Mandarci il Catalogo
     //! Customer in ascolto del Server
     for(int i=0; i<ITEMS_SHAREABLE; i++){
-        
-        // Pulisco i valori dei buffer
-        memset(product, 0, sizeof(product));
-        memset(price, 0, sizeof(price));
-        memset(seller, 0, sizeof(seller));
 
         reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
-                         block, WRITE_STREAM);
+                         timedBlock, WRITE_STREAM);
         assertReply(c2r, reply);    // Verifica errori nella comunicazione
 
         ReadStreamMsgVal(reply, 0, 0, 1, product);
@@ -140,7 +138,13 @@ void Customer::requestArticles(){
 
         freeReplyObject(reply);
         addItem(Article(product, price, seller));   //Aggiungiamo gli articoli al catalogo dell'utente
+
+        // Pulisco i valori dei buffer
+        memset(product, 0, sizeof(product));
+        memset(price, 0, sizeof(price));
+        memset(seller, 0, sizeof(seller));
     }
+    printf("# Numero prodotti Catalogo Acquisiti (%ld)\n", getItemCount());
 }
 
 
@@ -153,7 +157,8 @@ void Customer::choose_item(){
         Article art = catalog[rand() % 100 +1];    
         reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());  //? so - Sending Obj
         assertReply(c2r, reply);
-        printf("#Ordine Spedito: (%s,%s,%s)\n",art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());
+        printf("#(%d) Ordine Spedito: (%s,%s,%s)\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());
+        freeReplyObject(reply);         
 
         orderCounter++;
         changeState(MAKE_DECISION_PHASE);   // Vediamo se dobbiamo fare un'altro ordine
@@ -212,7 +217,7 @@ void Customer::makeDecision(){
 
 // Funzione che manda una comunicazione di controllo 'so'
 void Customer::sendObj(){
-    printf("SEND on CTRL : OBJ\n");
+    printf("    SEND on CTRL : OBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "so");  //? so - Sending Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
@@ -220,7 +225,7 @@ void Customer::sendObj(){
 
 // Funzione che manda una comunicazione di controllo 'no'
 void Customer::sendNoObj(){
-    printf("SEND on CTRL : NOOBJ\n");
+    printf("    SEND on CTRL : NO OBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "no");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
@@ -228,7 +233,7 @@ void Customer::sendNoObj(){
 
 // Funzione che manda una comunicazione di controllo 'ro' Requesting Object - Richiesta Catalogo
 void Customer::sendReqObj(){
-    printf("SEND on CTRL : REQOBJ\n");
+    printf("    SEND on CTRL : REQUEST OBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "ro");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
