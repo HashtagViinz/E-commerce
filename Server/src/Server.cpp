@@ -9,7 +9,7 @@ Server::Server() {
     
     printf("Hello I'm Alive :D\n\n");
 
-    for(int i = 0; i<20; i++){
+    for(int i = 0; i<100; i++){
         this->running();
     }
 
@@ -123,8 +123,7 @@ void Server::listenSellers(){
 // Funzione che gestisce la comunicazione fra Customer e Server
 void Server::listenCustomer(){
     bool wait = true;
-    char msg[10];                       // Valore messaggio richiesta ("so","no")
-
+    char msg[20];                       // Valore messaggio richiesta
     //? delete stream if it exists
     reply = RedisCommand(c2r, "DEL %s", CUST_R_STREAM);
     assertReply(c2r, reply);
@@ -140,11 +139,13 @@ void Server::listenCustomer(){
     reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 STREAMS %s >", 
                           block, CTRL);
     assertReply(c2r, reply);                // Verifica errori nella comunicazione
+    printf("Messaggio di controllo arrivato:\n");
+    printReply(reply);
     memset(msg, 0, sizeof(msg));            // Pulisco i valori dei buffer
     ReadStreamMsgVal(reply, 0, 0, 1, msg);  // Leggo il valore 
     freeReplyObject(reply);
 
-    if(strcmp(msg, "ro") == 0){             // 'ro' - requesting object
+    if(strcmp(msg, "RequestCatalog") == 0){             // 'ro' - requesting object
         printf("# Richiesta ricevuta - Inizio a mandare il Catalogo...\n");
         for (Item i : available_Items){
 
@@ -171,7 +172,7 @@ void Server::listenCustomer(){
     while(wait){
         reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
                             timedBlock, CTRL);
-        
+        printReply(reply);
         // TODO Togli questa sezione 
         if (reply == NULL) {
             printf("----------------Errore: reply è NULL\n");
@@ -186,14 +187,15 @@ void Server::listenCustomer(){
         assertReply(c2r, reply);                // Verifica errori nella comunicazione
         ReadStreamMsgVal(reply, 0, 0, 1, msg);  // Leggo il valore 
         freeReplyObject(reply);
+        printf("----> msg:%s\n",msg);
 
-        if(strcmp(msg, "so") == 0){             // E' Stato mandato un obj 
+        if(strcmp(msg, "SendingObject") == 0){             // E' Stato mandato un obj 
             printf("# Connessione instaurata - Ordini in arrivo \n");
 
             reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
                             timedBlock, OBJ_CH);
             assertReply(c2r, reply);  // Verifica errori nella comunicazione
-
+            printReply(reply);
             // ! Gestione ordine dal Client
 
             //printReply(reply);
@@ -209,8 +211,8 @@ void Server::listenCustomer(){
             memset(price, 0, sizeof(price));
             memset(seller, 0, sizeof(seller));
 
-        } else if(strcmp(msg, "no") == 0) {
-            printf("# Chiusura Connessione\n");
+        } else if(strcmp(msg, "StopSendingObject") == 0) {
+            printf("#### Chiusura Connessione temporanea\n");
             wait=false;
 
         }

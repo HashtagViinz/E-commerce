@@ -38,9 +38,11 @@ void Customer::elaboration(){
         nextState();
         break;
     case MAKE_DECISION_PHASE:
+        printf("Sto prendendo una decisione\n");
         makeDecision();         // gestione probabilità di morte
         break;
     case CHOICE_PHASE:
+        printf("Sto scegliendo cosa ordinare\n");
         choose_item();
         break;
     case WAITING_PHASE:
@@ -153,8 +155,11 @@ void Customer::choose_item(){
     if (orderCounter == MAX_ORDER){             //Ne ho mandati già 4 allora dico al server che non devo mandarne più
         sendNoObj();
         changeState(WAITING_PHASE);
+
     }else if(orderCounter < MAX_ORDER){         // Se non ne ho mandati ancora 4 allora lo genero e lo spedisco
-        Article art = catalog[rand() % 100 +1];    
+        Article art = catalog[rand() % 100 +1];   
+        
+        sendObj(); 
         reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());  //? so - Sending Obj
         assertReply(c2r, reply);
         printf("#(%d) Ordine Spedito: (%s,%s,%s)\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());
@@ -206,8 +211,7 @@ void Customer::printReply(redisReply *reply, int level) {
 
 // Questa funzione ci indirizza randomicamente, con probabilità non nulla, in una delle due possibili scelte.
 void Customer::makeDecision(){
-    if(orderCounter < MAX_ORDER and (rand() %10 +1) > NOT_ORDER_PROB){   //controllo che non abbiamo mandato già 4 pacchetti e che la probabilità vada a favore della spedizione
-        sendObj();          
+    if(orderCounter < MAX_ORDER and (rand() %10 +1) > NOT_ORDER_PROB){   //controllo che non abbiamo mandato già 4 pacchetti e che la probabilità vada a favore della spedizione          
         changeState(CHOICE_PHASE);
     } else {
         sendNoObj();
@@ -218,7 +222,7 @@ void Customer::makeDecision(){
 // Funzione che manda una comunicazione di controllo 'so'
 void Customer::sendObj(){
     printf("    SEND on CTRL : OBJ\n");
-    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "so");  //? so - Sending Obj
+    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "SendingObject");  //? so - Sending Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
 }
@@ -226,15 +230,15 @@ void Customer::sendObj(){
 // Funzione che manda una comunicazione di controllo 'no'
 void Customer::sendNoObj(){
     printf("    SEND on CTRL : NO OBJ\n");
-    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "no");  //? no - No Obj
+    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "StopSendingObject");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
 }
 
 // Funzione che manda una comunicazione di controllo 'ro' Requesting Object - Richiesta Catalogo
 void Customer::sendReqObj(){
-    printf("    SEND on CTRL : REQUEST OBJ\n");
-    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "ro");  //? no - No Obj
+    printf("    SEND on CTRL : RICHIESTA CATALOGO\n");
+    reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "RequestCatalog");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
 }
