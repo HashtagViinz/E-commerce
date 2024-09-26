@@ -7,13 +7,15 @@ Server::Server() {
     this->pid = getpid();
     this->swState = ON_CONNECTION;
     
+    // Creiamo l'intestazione solo se il file non esiste
+    creaIntestazione(intestazioneProduct);
+
     printf("Hello I'm Alive :D\n\n");
 
-    for(int i = 0; i<100; i++){
+    for(int i = 0; i<LIFE_STEPS; i++){
         this->running();
     }
-
-
+    file.close();
     redisFree(c2r);
 }
 
@@ -72,12 +74,10 @@ void Server::connection(){
     dumpReply(reply, 0);
     freeReplyObject(reply);
 
-
     reply = RedisCommand(c2r, "DEL %s", CTRL);
     assertReply(c2r, reply);
     dumpReply(reply, 0);
     freeReplyObject(reply);
-
 
     /* Create streams/groups */
     initStreams(this->c2r, READ_STREAM);
@@ -110,6 +110,9 @@ void Server::listenSellers(){
         ReadStreamMsgVal(reply, 0, 0, 3, price);
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
 
+        std::vector<std::string> obj = {product, price, seller};    // $ Ci salviamo le informazioni come vettore di stringhe
+        aggiungiRigaAlCSV(obj);
+
         addItem(Item(product, price, seller));
         //printf("(#!!#) Saved (%ld) || Item intercettato : (%s|%s|%s)\n", getItemCount(), product, price, seller);
 
@@ -122,6 +125,7 @@ void Server::listenSellers(){
 
 // Funzione che gestisce la comunicazione fra Customer e Server
 void Server::listenCustomer(){
+    int delay = rand() % 3;
     bool wait = true;
     char msg[20];                       // Valore messaggio richiesta
     //? delete stream if it exists
@@ -138,13 +142,20 @@ void Server::listenCustomer(){
     //! Mandiamo il catalogo al Seller
     reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 STREAMS %s >", 
                           block, CTRL);
-    assertReply(c2r, reply);                // Verifica errori nella comunicazione
-    memset(msg, 0, sizeof(msg));            // Pulisco i valori dei buffer
-    ReadStreamMsgVal(reply, 0, 0, 1, msg);  // Leggo il valore 
+    auto start = std::chrono::high_resolution_clock::now(); //! timestamp start
+    
+    assertReply(c2r, reply);                                // Verifica errori nella comunicazione
+    memset(msg, 0, sizeof(msg));                            // Pulisco i valori dei buffer
+    ReadStreamMsgVal(reply, 0, 0, 1, msg);                  // Leggo il valore 
     freeReplyObject(reply);
 
-    if(strcmp(msg, "RequestCatalog") == 0){             // 'ro' - requesting object
+
+    if(strcmp(msg, "RequestCatalog") == 0){                 
         printf("# Sending Catalog...\n");
+        
+        // ? Genero un ritardo Randomico
+        sleep(delay);
+
         for (Item i : available_Items){
 
             // Recupera i valori dai getter
@@ -158,7 +169,9 @@ void Server::listenCustomer(){
             freeReplyObject(reply);
         }
     }
-    printf("# Catalog sended...\n");
+    auto end = std::chrono::high_resolution_clock::now();   //! timestamp end
+    printf("#RITARDO: %s %f | DELAY: %d\n",isLessThanOneSecond(start, end), durationInSeconds(start, end), delay);
+    printf("# Catalog sended...\n");    
 
     // ! ASPETTIAMO ORDINI
 
@@ -166,6 +179,8 @@ void Server::listenCustomer(){
     char product[100];                  // Prodotto
     char price[4];                      // prezzo
     char seller[100];                   // valori azienda
+    char user[100];                     // user
+    
     printf("#################### - In ascolto degli ordini del client:\n");
     while(wait){
         reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
@@ -191,19 +206,19 @@ void Server::listenCustomer(){
             reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
                             timedBlock, OBJ_CH);
             assertReply(c2r, reply);  // Verifica errori nella comunicazione
-            //printReply(reply);
             // ! Gestione ordine dal Client
 
-            //printReply(reply);
             ReadStreamMsgVal(reply, 0, 0, 1, product);
             ReadStreamMsgVal(reply, 0, 0, 3, price);
             ReadStreamMsgVal(reply, 0, 0, 5, seller);
+            ReadStreamMsgVal(reply, 0, 0, 7, user);
+
             freeReplyObject(reply);
 
-            printf("# Ordine Ricevuto : (%s, %s, %s)\n", product, price, seller);
+            printf("# Ordine Ricevuto : (%s, %s, %s, %s)\n", product, price, seller, user);
 
             // ! Invio dell'ordine ai Deliver
-            reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s user %s", ORDER_STREAM ,product, price, seller, "Gesu");  
+            reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s user %s", ORDER_STREAM ,product, price, seller, user);  
             assertReply(c2r, reply);
             freeReplyObject(reply);
 
@@ -211,6 +226,8 @@ void Server::listenCustomer(){
             memset(product, 0, sizeof(product));
             memset(price, 0, sizeof(price));
             memset(seller, 0, sizeof(seller));
+            memset(seller, 0, sizeof(user));
+
 
         } else if(strcmp(msg, "StopSendingObject") == 0) {
             wait=false;
@@ -262,9 +279,6 @@ void Server::printReply(redisReply *reply, int level) {
     }
 }
 
-/* ------------------------------- Utilitarie ------------------------------- */
-
-
 int Server::getPid() {
     return pid;
 }
@@ -280,8 +294,59 @@ void Server::getAvailable_Items() {
     }
 }
 
+double Server::durationInSeconds(std::chrono::high_resolution_clock::time_point start, std::chrono::high_resolution_clock::time_point end)
+{
+     // Calcola la differenza in secondi
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+    
+    return duration.count(); // Restituisce la durata in secondi come double
+}
+
+const char *Server::isLessThanOneSecond(std::chrono::high_resolution_clock::time_point start, std::chrono::high_resolution_clock::time_point end)
+{
+    if(durationInSeconds(start, end) < CHECK_DELAY){ // Restituisce true se la differenza è inferiore a 1 secondo
+        return "FALSE";
+    } else {
+        return "TRUE";
+    }
+}
+
 size_t Server::getItemCount() const {
     return available_Items.size();
 }
 
+// Funzione per creare l'intestazione solo se il file non esiste
+void Server::creaIntestazione(const std::vector<std::string>& intestazione) {
+    std::ifstream fileTest(DB);
+    bool esiste = fileTest.good();
+    fileTest.close();
 
+    // Se il file non esiste, scriviamo l'intestazione
+    if (!esiste) {
+        aggiungiRigaAlCSV(intestazione);
+    }
+}
+
+// Funzione per creare o aprire un file CSV e aggiungere una riga di dati
+void Server::aggiungiRigaAlCSV(const std::vector<std::string>& dati) {
+    file.open(DB, std::ios::app);
+    // Controlliamo se il file è stato aperto correttamente
+    if (!file.is_open()) {
+        std::cerr << "Errore nell'apertura del file!" << std::endl;
+        return;
+    }
+
+    // Scriviamo i dati separati da virgole
+    for (size_t i = 0; i < dati.size(); ++i) {
+        file << dati[i];
+        if (i != dati.size() - 1) {
+            file << ",";  // Separatore tra i dati
+        }
+    }
+    file << "\n";  // Fine riga
+
+    // Chiudiamo il file
+    std::cout << "Dati aggiunti correttamente!" << std::endl;
+    file.close();
+
+}

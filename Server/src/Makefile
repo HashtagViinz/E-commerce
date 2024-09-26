@@ -10,6 +10,7 @@ CC=g++
 #CFLAGS=-std=c++11 -I. -I$(IDIR) -I/usr/include/postgresql -lpq -lm 
 CFLAGS=-std=c++20 -g -ggdb -fpermissive -L/usr/local/lib -Wall -I. -I$(IDIR) -lpq -lm -lhiredis
 
+
 # use this when no connection to Postgresql (library lpq) is needed
 #CFLAGS=-std=c++11 -I. -I$(IDIR) -lm 
 

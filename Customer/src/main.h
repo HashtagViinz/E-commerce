@@ -13,7 +13,7 @@
 #include "con2redis.h"
 #include "Customer.h"
 
-#define CUSTOMER_NUM 1           // ? Numero di Customer che genereremo
+#define CUSTOMER_NUM 20           // ? Numero di Customer che genereremo
 
 
 int micro_sleep(long usec);

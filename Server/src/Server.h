@@ -9,6 +9,10 @@
 #include <list>
 #include <string.h>
 #include<vector>
+#include <chrono>
+#include <fstream>              // per gestire file input/output
+
+
 
 // Comunicazione redis
 #include "con2redis.h"          //Includiamo l'interfaccia di con2redis
@@ -17,6 +21,11 @@
 #include "Item.h"
 
 #define SERVER_MAX_ITEMS 100
+#define LIFE_STEPS 500          // indichiamo i passi di vita del Server
+#define CHECK_DELAY 1           // valore di controllo del ritardo
+
+#define DB "../stats/tempDB.csv"
+
 #define CTRL "Control_Channel"
 #define OBJ_CH "Object_Channel"
 #define READ_STREAM "Seller_stream"
@@ -25,7 +34,7 @@
 #define CUST_R_STREAM "Customer_r_stream"   // Server ascolta in questo canale
 
 enum Server_State {
-    ON_CONNECTION,  // $ Fase di connessione (1° Fase)
+    ON_CONNECTION,  //$ Fase di connessione (1° Fase)
     ON_SELLER,      //$ prendiamo gli items dai venditori utilizzando redis per poi salvarli in DB
     ON_CUSTOMER,    //$ prendiamo gli ordini dei compratori (???)
 };
@@ -39,7 +48,11 @@ class Server {
         vector<Item> available_Items;       //TODO - Toglila in seguito non ha senso qui  
         bool read = true;                   //TODO Valore temporaneo
         int block = 1000000000;             //TODO Valore che indica l'attendere
-        int timedBlock = 10000;             // ? Utilizzato per temporizzare l'attesa 
+        int timedBlock = 10000;             // ? Utilizzato per temporizzare l'attesa
+        std::vector<std::string> intestazioneProduct = {"Product", "Price", "Seller"};
+        std::ofstream file;                 // Stream per il file CSV
+
+
 
     // ! Metodi privati
         void changeState(Server_State swNewState);
@@ -56,10 +69,15 @@ class Server {
         int getPid();
         void addItem(Item item);
         void getAvailable_Items();
-        
-        
+        double durationInSeconds(std::chrono::high_resolution_clock::time_point start,
+                          std::chrono::high_resolution_clock::time_point end);
+        const char* isLessThanOneSecond(std::chrono::high_resolution_clock::time_point start,
+                          std::chrono::high_resolution_clock::time_point end);
+        void aggiungiRigaAlCSV(const std::vector<std::string>& dati);
+        void creaIntestazione(const std::vector<std::string>& intestazione);
         //TODO Elimina questa Funzione
-        static void printReply(redisReply *reply, int level = 0); // Argomento predefinito qui
+        static void printReply(redisReply *reply, int level = 0);
+
 
 };
 

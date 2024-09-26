@@ -46,8 +46,9 @@ void Customer::elaboration(){
         choose_item();
         break;
     case WAITING_PHASE:
-        printf("# %s",getStrState().c_str());
-        redisFree(c2r);         // Libera la connessione a Redis
+        printf("# %s\n\n",getStrState().c_str());
+        //redisFree(c2r);           // Libera la connessione a Redis
+        usleep(500000);             //Accetta microSecondi 1s=1.000.000 micros | 0.5s=500.000micros
         changeState(SATISFACTION_PHASE);
         break;
     case SATISFACTION_PHASE:
@@ -160,9 +161,9 @@ void Customer::choose_item(){
         Article art = catalog[rand() % 100 +1];   
         
         sendObj(); 
-        reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());  //? so - Sending Obj
+        reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s user %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), std::to_string(ID).c_str());  //? so - Sending Obj
         assertReply(c2r, reply);
-        printf("#(%d) Ordine Spedito: (%s,%s,%s)\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str());
+        printf("#(%d) Ordine Spedito: (%s,%s,%s) da %d\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), ID);
         freeReplyObject(reply);         
 
         orderCounter++;
