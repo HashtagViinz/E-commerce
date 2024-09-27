@@ -48,7 +48,7 @@ void Customer::elaboration(){
     case WAITING_PHASE:
         printf("# %s\n\n",getStrState().c_str());
         //redisFree(c2r);           // Libera la connessione a Redis
-        usleep(500000);             //Accetta microSecondi 1s=1.000.000 micros | 0.5s=500.000micros
+        usleep(300000);             //Accetta microSecondi 1s=1.000.000 micros | 0.5s=500.000micros
         changeState(SATISFACTION_PHASE);
         break;
     case SATISFACTION_PHASE:
@@ -158,14 +158,20 @@ void Customer::choose_item(){
         changeState(WAITING_PHASE);
 
     }else if(orderCounter < MAX_ORDER){         // Se non ne ho mandati ancora 4 allora lo genero e lo spedisco
-        Article art = catalog[rand() % 100 +1];   
-        
-        sendObj(); 
-        reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s user %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), std::to_string(ID).c_str());  //? so - Sending Obj
-        assertReply(c2r, reply);
-        printf("#(%d) Ordine Spedito: (%s,%s,%s) da %d\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), ID);
-        freeReplyObject(reply);         
-
+        if( (rand() %10 +1) < 2){                 // ? PROB:0,1 manda un ordine vuoto, contenente solo il nome dell'utente.
+            sendObj(); 
+            reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s user %s", OBJ_CH, " ", " ", " ", std::to_string(ID).c_str());  //? so - Sending Obj
+            assertReply(c2r, reply);
+            printf("#(%d) Ordine Spedito: ( , , )\n", orderCounter);
+            freeReplyObject(reply);
+        } else {
+            Article art = catalog[rand() % 100 +1];   
+            sendObj(); 
+            reply = RedisCommand(c2r, "XADD %s * product %s price %s seller %s user %s", OBJ_CH, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), std::to_string(ID).c_str());  //? so - Sending Obj
+            assertReply(c2r, reply);
+            printf("#(%d) Ordine Spedito: (%s,%s,%s) da %d\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), ID);
+            freeReplyObject(reply);
+        }
         orderCounter++;
         changeState(MAKE_DECISION_PHASE);   // Vediamo se dobbiamo fare un'altro ordine
     }

@@ -9,6 +9,7 @@ Server::Server() {
     
     // Creiamo l'intestazione solo se il file non esiste
     creaIntestazione(intestazioneProduct);
+    creaIntestazioneErr_Com(intestazioneErr_Com);
 
     printf("Hello I'm Alive :D\n\n");
 
@@ -63,7 +64,7 @@ std::string Server::getStrState() {
 
 // Funzione che gestisce la connessione a redis usando l'attributo c2r.
 void Server::connection(){
-     // ? SETUP Connection 
+    // ? SETUP Connection 
     printf("Server ON : Connection(): connecting to redis ...| pid: %d - User: %s\n", getPid(), "Server ");
     this->c2r = redisConnect("localhost", 6379);
     printf("Server ON : Connection(): connected to redis | pid: %d - User: %s\n", getPid(), "Server");
@@ -111,7 +112,7 @@ void Server::listenSellers(){
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
 
         std::vector<std::string> obj = {product, price, seller};    // $ Ci salviamo le informazioni come vettore di stringhe
-        aggiungiRigaAlCSV(obj);
+        aggiungiRigaAlCSV(DB, obj);
 
         addItem(Item(product, price, seller));
         //printf("(#!!#) Saved (%ld) || Item intercettato : (%s|%s|%s)\n", getItemCount(), product, price, seller);
@@ -128,6 +129,7 @@ void Server::listenCustomer(){
     int delay = rand() % 3;
     bool wait = true;
     char msg[20];                       // Valore messaggio richiesta
+
     //? delete stream if it exists
     reply = RedisCommand(c2r, "DEL %s", CUST_R_STREAM);
     assertReply(c2r, reply);
@@ -149,12 +151,9 @@ void Server::listenCustomer(){
     ReadStreamMsgVal(reply, 0, 0, 1, msg);                  // Leggo il valore 
     freeReplyObject(reply);
 
-
     if(strcmp(msg, "RequestCatalog") == 0){                 
         printf("# Sending Catalog...\n");
-        
-        // ? Genero un ritardo Randomico
-        sleep(delay);
+        sleep(delay);                                       // ? Genero un ritardo Randomico
 
         for (Item i : available_Items){
 
@@ -174,7 +173,6 @@ void Server::listenCustomer(){
     printf("# Catalog sended...\n");    
 
     // ! ASPETTIAMO ORDINI
-
     //$ info mex
     char product[100];                  // Prodotto
     char price[4];                      // prezzo
@@ -213,6 +211,12 @@ void Server::listenCustomer(){
             ReadStreamMsgVal(reply, 0, 0, 5, seller);
             ReadStreamMsgVal(reply, 0, 0, 7, user);
 
+            if(checkData(product, price, seller)){
+                std::vector<std::string> obj = {user, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
+                aggiungiRigaAlCSV(ERR_COMUNICATION, obj);
+                printf("#ANOMALIA di %s\n", user);
+                continue;
+            }
             freeReplyObject(reply);
 
             printf("# Ordine Ricevuto : (%s, %s, %s, %s)\n", product, price, seller, user);
@@ -287,6 +291,29 @@ void Server::addItem(Item item) {
     available_Items.push_back(item);
 }
 
+// Funzione per convertire timestamp in stringa
+std::string Server::timestampToString() {
+    std::string ss;
+
+    //auto timestamp = std::chrono::high_resolution_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    // Convertilo in struttura di tm
+    std::tm* local_time = std::localtime(&time);
+
+    // Estrai ore, minuti e secondi
+    int hours = local_time->tm_hour;
+    int minutes = local_time->tm_min;
+    int seconds = local_time->tm_sec;
+
+    // Crea una stringa con ore, minuti e secondi
+    std::ostringstream time_stream;
+    time_stream << std::setw(2) << std::setfill('0') << hours << ":"
+                << std::setw(2) << std::setfill('0') << minutes << ":"
+                << std::setw(2) << std::setfill('0') << seconds;    
+    return time_stream.str();
+}
+
 // Funzione che stampa gli items
 void Server::getAvailable_Items() {
     for (Item i : available_Items){
@@ -323,13 +350,28 @@ void Server::creaIntestazione(const std::vector<std::string>& intestazione) {
 
     // Se il file non esiste, scriviamo l'intestazione
     if (!esiste) {
-        aggiungiRigaAlCSV(intestazione);
+        aggiungiRigaAlCSV(DB, intestazione);
     }
 }
 
-// Funzione per creare o aprire un file CSV e aggiungere una riga di dati
-void Server::aggiungiRigaAlCSV(const std::vector<std::string>& dati) {
-    file.open(DB, std::ios::app);
+// Funzione per creare l'intestazione solo se il file non esiste
+void Server::creaIntestazioneErr_Com(const std::vector<std::string>& intestazione) {
+    std::ifstream fileTest(ERR_COMUNICATION);
+    bool esiste = fileTest.good();
+    fileTest.close();
+
+    // Se il file non esiste, scriviamo l'intestazione
+    if (!esiste) {
+        aggiungiRigaAlCSV(ERR_COMUNICATION ,intestazione);
+    }
+}
+
+void Server::aggiungiRigaAlCSV(const std::string& percorsoFile, const std::vector<std::string>& dati) {
+    std::ofstream file;
+
+    // Apriamo il file in modalità append
+    file.open(percorsoFile, std::ios::app);
+
     // Controlliamo se il file è stato aperto correttamente
     if (!file.is_open()) {
         std::cerr << "Errore nell'apertura del file!" << std::endl;
@@ -346,7 +388,16 @@ void Server::aggiungiRigaAlCSV(const std::vector<std::string>& dati) {
     file << "\n";  // Fine riga
 
     // Chiudiamo il file
-    std::cout << "Dati aggiunti correttamente!" << std::endl;
     file.close();
+}
 
+bool Server::checkData(const char product[], const char price[], const char seller[]) {
+    return isValidCharArray(product) && isValidCharArray(price) &&
+           isValidCharArray(seller);
+}
+
+bool Server::isValidCharArray(const char *str)
+{   
+    return strlen(str) == 1 && strcmp(str, " ") == 0; 
+    
 }

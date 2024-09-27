@@ -15,10 +15,10 @@
 #define OBJ_CH "Object_Channel"
 
 
-#define SELLER_STATE_LENGHT 5               // ? Dimensione dell'Enum degli Stati di Customer
-#define MAX_ORDER 4                         // ? Numero massimo di ordini
-#define NOT_ORDER_PROB  2                      // ! Probabilità di NON ordinare nuovamente (4/10)
-
+#define SELLER_STATE_LENGHT 5                   // ? Dimensione dell'Enum degli Stati di Customer
+#define MAX_ORDER 4                             // ? Numero massimo di ordini
+#define NOT_ORDER_PROB  2                       // ! Probabilità di NON ordinare nuovamente (4/10)
+#define NULL_ORDER  1                           // ! Probabilità Ordine vuoto
 
 
 enum Customer_State {
