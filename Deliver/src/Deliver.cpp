@@ -10,6 +10,10 @@ Deliver::Deliver() {
     this->myseed = (unsigned)time(NULL); // Uso un Seed per provare tante possibili strade per il mio Sellers. Ogni seed crea strade diverse.
     srand(myseed);
 
+    // Creiamo l'intestazione solo se il file non esiste
+    creaIntestazione(intestazioneDeliv);
+
+
     for(int i = 0; i<4; i++){
         this->processing();
     }
@@ -54,7 +58,6 @@ void Deliver::nextState() {
 }
 
 /* -------------------------- Management ------------------------- */
-
 void Deliver::connection(){
     printf("### CONNECTION FASE Deliver");
 
@@ -69,8 +72,14 @@ void Deliver::connection(){
     dumpReply(reply, 0);
     freeReplyObject(reply);
 
+    reply = RedisCommand(c2r, "DEL %s", CUSTOMER_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+    freeReplyObject(reply);
+
     /* Create streams/groups */
     initStreams(c2r, READ_STREAM);
+    initStreams(c2r, CUSTOMER_STREAM);
 }
 
 void Deliver::onListen(){
@@ -91,21 +100,85 @@ void Deliver::onListen(){
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
         ReadStreamMsgVal(reply, 0, 0, 7, user);
 
-        printf("(%s,%s,%s,%s)\n", product, price, seller, user);
-
         freeReplyObject(reply);
 
+        // ? Genero la possibilità che un ordine venga accettato.
+        if(acceptedOrder()){
+            printf("# ORDINE RIFIUTATO :(%s,%s,%s,%s)\n", product, price, seller, user);
+            reply = RedisCommand(c2r, "XADD %s * stato %s product %s price %s seller %s", CUSTOMER_STREAM, "RIFIUTATO", product, price, seller);  
+            assertReply(c2r, reply);
+            freeReplyObject(reply);
+
+            std::vector<std::string> obj = {"RIFIUTATO",product, price, seller, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
+            aggiungiRigaAlCSV(ACC_RIF_DB, obj);
+        }
+        else{
+            printf("# ORDINE ACCETTATO :(%s,%s,%s,%s)\n", product, price, seller, user);
+            reply = RedisCommand(c2r, "XADD %s * stato %s product %s price %s seller %s", CUSTOMER_STREAM, "ACCETTATO", product, price, seller); 
+            assertReply(c2r, reply);
+            freeReplyObject(reply);
+
+            std::vector<std::string> obj = {"ACCETTATO",product, price, seller, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
+            aggiungiRigaAlCSV(ACC_RIF_DB, obj);
+        }
         // Pulisco i valori dei buffer
         memset(product, 0, sizeof(product));
         memset(price, 0, sizeof(price));
         memset(seller, 0, sizeof(seller));
-
+        memset(seller, 0, sizeof(user));
     }
-
 
 }   
 
+bool Deliver::acceptedOrder(){
+    return (rand() %10 +1) <= NOT_ACCEPT_ORDER;
+}
 
+void Deliver::creaIntestazione(const std::vector<std::string> &intestazione){
+    std::ifstream fileTest(ACC_RIF_DB);
+    bool esiste = fileTest.good();
+    fileTest.close();
+    // Se il file non esiste, scriviamo l'intestazione
+    if (!esiste) {
+        aggiungiRigaAlCSV(ACC_RIF_DB, intestazione);
+    }
+}
 
+void Deliver::aggiungiRigaAlCSV(const std::string& percorsoFile, const std::vector<std::string>& dati) {
+    std::ofstream file;
+    file.open(percorsoFile, std::ios::app);
+    if (!file.is_open()) {
+        std::cerr << "Errore nell'apertura del file!" << std::endl;
+        return;
+    }
+    for (size_t i = 0; i < dati.size(); ++i) {
+        file << dati[i];
+        if (i != dati.size() - 1) {
+            file << ","; 
+        }
+    }
+    file << "\n"; 
+    file.close();
+}
 
+std::string Deliver::timestampToString() {
+    std::string ss;
 
+    //auto timestamp = std::chrono::high_resolution_clock::now();
+    auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    // Convertilo in struttura di tm
+    std::tm* local_time = std::localtime(&time);
+
+    // Estrai ore, minuti e secondi
+    int hours = local_time->tm_hour;
+    int minutes = local_time->tm_min;
+    int seconds = local_time->tm_sec;
+
+    // Crea una stringa con ore, minuti e secondi
+    std::ostringstream time_stream;
+    time_stream << std::setw(2) << std::setfill('0') << hours << ":"
+                << std::setw(2) << std::setfill('0') << minutes << ":"
+                << std::setw(2) << std::setfill('0') << seconds;    
+    return time_stream.str();
+}

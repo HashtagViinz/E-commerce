@@ -8,8 +8,9 @@ Server::Server() {
     this->swState = ON_CONNECTION;
     
     // Creiamo l'intestazione solo se il file non esiste
-    creaIntestazione(intestazioneProduct);
-    creaIntestazioneErr_Com(intestazioneErr_Com);
+    creaIntestazione(DB, intestazioneProduct);
+    creaIntestazione(ERR_COMUNICATION, intestazioneErr_Com);
+    creaIntestazione(LOG_ORD, intes_LOG_Ord);
 
     printf("Hello I'm Alive :D\n\n");
 
@@ -80,10 +81,17 @@ void Server::connection(){
     dumpReply(reply, 0);
     freeReplyObject(reply);
 
+    reply = RedisCommand(c2r, "DEL %s", ANOMALY_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+    freeReplyObject(reply);
+
+
     /* Create streams/groups */
     initStreams(this->c2r, READ_STREAM);
     initStreams(this->c2r, CTRL);
     initStreams(this->c2r, OBJ_CH);
+    initStreams(this->c2r, ANOMALY_STREAM);
 }
 
 // Funzione che gestisce la fase di listen. La comunicazione può avvenire da tutti i canali di comunicazione
@@ -111,13 +119,12 @@ void Server::listenSellers(){
         ReadStreamMsgVal(reply, 0, 0, 3, price);
         ReadStreamMsgVal(reply, 0, 0, 5, seller);
 
-        std::vector<std::string> obj = {product, price, seller};    // $ Ci salviamo le informazioni come vettore di stringhe
+        std::vector<std::string> obj = {timestampToString(),product, price, seller};    // $ Ci salviamo le informazioni come vettore di stringhe
         aggiungiRigaAlCSV(DB, obj);
 
         addItem(Item(product, price, seller));
         //printf("(#!!#) Saved (%ld) || Item intercettato : (%s|%s|%s)\n", getItemCount(), product, price, seller);
 
-        //dumpReply(reply, 0);
         freeReplyObject(reply);
         i++;
     }
@@ -144,7 +151,11 @@ void Server::listenCustomer(){
     //! Mandiamo il catalogo al Seller
     reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 STREAMS %s >", 
                           block, CTRL);
-    auto start = std::chrono::high_resolution_clock::now(); //! timestamp start
+                          
+    auto start = std::chrono::high_resolution_clock::now(); 
+
+    std::vector<std::string> obj = {timestampToString(), "1"};    // $ Ci salviamo le informazioni come vettore di stringhe
+    aggiungiRigaAlCSV(LOG_ORD, obj);
     
     assertReply(c2r, reply);                                // Verifica errori nella comunicazione
     memset(msg, 0, sizeof(msg));                            // Pulisco i valori dei buffer
@@ -168,12 +179,13 @@ void Server::listenCustomer(){
             freeReplyObject(reply);
         }
     }
+
     auto end = std::chrono::high_resolution_clock::now();   //! timestamp end
     printf("#RITARDO: %s %f | DELAY: %d\n",isLessThanOneSecond(start, end), durationInSeconds(start, end), delay);
     printf("# Catalog sended...\n");    
 
     // ! ASPETTIAMO ORDINI
-    //$ info mex
+                                        //$ info mex
     char product[100];                  // Prodotto
     char price[4];                      // prezzo
     char seller[100];                   // valori azienda
@@ -182,7 +194,7 @@ void Server::listenCustomer(){
     printf("#################### - In ascolto degli ordini del client:\n");
     while(wait){
         reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
-                            timedBlock, CTRL);
+                            block, CTRL);        
         // TODO Togli questa sezione 
         if (reply == NULL) {
             printf("----------------Errore: reply è NULL\n");
@@ -204,20 +216,30 @@ void Server::listenCustomer(){
             reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
                             timedBlock, OBJ_CH);
             assertReply(c2r, reply);  // Verifica errori nella comunicazione
-            // ! Gestione ordine dal Client
 
+            // ! Gestione ordine dal Client
             ReadStreamMsgVal(reply, 0, 0, 1, product);
             ReadStreamMsgVal(reply, 0, 0, 3, price);
             ReadStreamMsgVal(reply, 0, 0, 5, seller);
             ReadStreamMsgVal(reply, 0, 0, 7, user);
+            freeReplyObject(reply);
 
-            if(checkData(product, price, seller)){
+            // ! Controllo Anomalia
+            if(checkData(product, price, seller)){         
+                printf("Sto mandando in CTRL : ANOMALY\n");
+                reply = RedisCommand(c2r, "XADD %s * requestCode %s", ANOMALY_STREAM, "ANOMALY"); // $ Comunichiamo che abbiamo trovato un'anomalia
+                assertReply(c2r, reply);
+                freeReplyObject(reply); 
+
                 std::vector<std::string> obj = {user, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
                 aggiungiRigaAlCSV(ERR_COMUNICATION, obj);
                 printf("#ANOMALIA di %s\n", user);
                 continue;
             }
-            freeReplyObject(reply);
+            printf("Sto mandando in CTRL : NO_ANOMALY\n");
+            reply = RedisCommand(c2r, "XADD %s * requestCode %s", ANOMALY_STREAM, "NO_ANOMALY");  // $ Comunichiamo che non c'è nessuna anomalia
+            assertReply(c2r, reply);
+            freeReplyObject(reply); 
 
             printf("# Ordine Ricevuto : (%s, %s, %s, %s)\n", product, price, seller, user);
 
@@ -231,14 +253,11 @@ void Server::listenCustomer(){
             memset(price, 0, sizeof(price));
             memset(seller, 0, sizeof(seller));
             memset(seller, 0, sizeof(user));
-
-
         } else if(strcmp(msg, "StopSendingObject") == 0) {
+            printf("# Nessun ordine effettuato.\n");
             wait=false;
-
         }
         memset(msg, 0, sizeof(msg));            // Pulisco i valori dei buffer
-
     }
     printf("#################### - Chiusura connessione Ordini\n");
 
@@ -342,27 +361,15 @@ size_t Server::getItemCount() const {
     return available_Items.size();
 }
 
-// Funzione per creare l'intestazione solo se il file non esiste
-void Server::creaIntestazione(const std::vector<std::string>& intestazione) {
-    std::ifstream fileTest(DB);
-    bool esiste = fileTest.good();
+// Creiamo il file csv per i log
+void Server::creaIntestazione(const std::string& nomeFile, const std::vector<std::string>& intestazione) {
+    std::ifstream fileTest(nomeFile);  // Apri il file passato come argomento
+    bool esiste = fileTest.good();     // Controlla se il file esiste
     fileTest.close();
 
     // Se il file non esiste, scriviamo l'intestazione
     if (!esiste) {
-        aggiungiRigaAlCSV(DB, intestazione);
-    }
-}
-
-// Funzione per creare l'intestazione solo se il file non esiste
-void Server::creaIntestazioneErr_Com(const std::vector<std::string>& intestazione) {
-    std::ifstream fileTest(ERR_COMUNICATION);
-    bool esiste = fileTest.good();
-    fileTest.close();
-
-    // Se il file non esiste, scriviamo l'intestazione
-    if (!esiste) {
-        aggiungiRigaAlCSV(ERR_COMUNICATION ,intestazione);
+        aggiungiRigaAlCSV(nomeFile, intestazione);  // Aggiungi l'intestazione al file specificato
     }
 }
 
@@ -398,6 +405,6 @@ bool Server::checkData(const char product[], const char price[], const char sell
 
 bool Server::isValidCharArray(const char *str)
 {   
-    return strlen(str) == 1 && strcmp(str, " ") == 0; 
+    return strcmp(str, " ") == 0 || strcmp(str, "") == 0; 
     
 }

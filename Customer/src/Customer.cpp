@@ -34,20 +34,17 @@ void Customer::elaboration(){
     case ORDER_PHASE:
         printf("\n[REQUESTED] : CATALOGO\n");
         requestArticles();
-        printf("[RECEIVED] : CATALOGO\n");
+        printf("[RECEIVED] : CATALOGO\n#\n# Spedisco Ordini:\n");
         nextState();
         break;
     case MAKE_DECISION_PHASE:
-        printf("Sto prendendo una decisione\n");
         makeDecision();         // gestione probabilità di morte
         break;
     case CHOICE_PHASE:
-        printf("Sto scegliendo cosa ordinare\n");
         choose_item();
         break;
     case WAITING_PHASE:
-        printf("# %s\n\n",getStrState().c_str());
-        //redisFree(c2r);           // Libera la connessione a Redis
+        listenDeliver();
         usleep(300000);             //Accetta microSecondi 1s=1.000.000 micros | 0.5s=500.000micros
         changeState(SATISFACTION_PHASE);
         break;
@@ -113,10 +110,22 @@ void Customer::connectToServer(){
     dumpReply(reply, 0);
     freeReplyObject(reply);
 
+    reply = RedisCommand(c2r, "DEL %s", DELIVER_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+    freeReplyObject(reply);
+
+    reply = RedisCommand(c2r, "DEL %s", ANOMALY_STREAM);
+    assertReply(c2r, reply);
+    dumpReply(reply, 0);
+    freeReplyObject(reply);
+    
     /* Create streams/groups */
     initStreams(c2r, WRITE_STREAM);
     initStreams(c2r, CTRL);
     initStreams(c2r, OBJ_CH);
+    initStreams(c2r, DELIVER_STREAM);
+    initStreams(c2r, ANOMALY_STREAM);
 }
 
 void Customer::requestArticles(){
@@ -172,9 +181,63 @@ void Customer::choose_item(){
             printf("#(%d) Ordine Spedito: (%s,%s,%s) da %d\n", orderCounter, art.getName().c_str(), art.getPrice().c_str(), art.getSeller().c_str(), ID);
             freeReplyObject(reply);
         }
-        orderCounter++;
+        orderCounter++;     // Aggiungo che ho fatto un ordine
+        listenAnomalies();  // Se il server ha ricevuto un'anomalia allora diminuisco il counter
+
         changeState(MAKE_DECISION_PHASE);   // Vediamo se dobbiamo fare un'altro ordine
     }
+}
+
+// Funzione che permette la comunicazione tra Deliver e Customer
+void Customer::listenDeliver() {    
+    if(orderCounter!=0){
+        char product[100];      // Prodotto
+        char price[4];          // prezzo
+        char seller[100];       // valori azienda
+        char stato[20];         // stato ordine
+
+        printf("# - COMUNICAZIONE DA PARTE DEI DELIVER : \n");
+        for(int i=0; i < orderCounter; i++){
+            reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
+                            block, DELIVER_STREAM);
+            assertReply(c2r, reply);    // Verifica errori nella comunicazione
+
+            ReadStreamMsgVal(reply, 0, 0, 1, stato);
+            ReadStreamMsgVal(reply, 0, 0, 3, product);
+            ReadStreamMsgVal(reply, 0, 0, 5, price);
+            ReadStreamMsgVal(reply, 0, 0, 7, seller);
+            freeReplyObject(reply);
+
+            if(strcmp(stato, "ACCETTATO") == 0){
+                printf("#[ACCETTATO]: %s, %s, %s\n",product, price, seller);
+            } else {
+                printf("#[RIFIUTATO]: %s, %s, %s\n",product, price, seller);
+            }
+        }
+        memset(product, 0, sizeof(product));
+        memset(price, 0, sizeof(price));
+        memset(seller, 0, sizeof(seller));
+        memset(stato, 0, sizeof(stato));
+
+    }
+
+}
+
+void Customer::listenAnomalies(){
+    char err[30];
+    printf("## Controllo Anomalie:\n");
+    reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 NOACK STREAMS %s >", 
+                         block, ANOMALY_STREAM);
+    assertReply(c2r, reply);                // Verifica errori nella comunicazione
+    ReadStreamMsgVal(reply, 0, 0, 1, err);
+    freeReplyObject(reply);
+
+    if(strcmp(err, "ANOMALY") == 0){
+        printf("# Riscontrata Anomalia dal Server\n");
+        orderCounter--;
+    }
+    memset(err, 0, sizeof(err));
+
 }
 
 /* ------------------------------- Utilitarie ------------------------------- */
@@ -228,7 +291,7 @@ void Customer::makeDecision(){
 
 // Funzione che manda una comunicazione di controllo 'so'
 void Customer::sendObj(){
-    printf("    SEND on CTRL : OBJ\n");
+    //printf("    SEND on CTRL : OBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "SendingObject");  //? so - Sending Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
@@ -236,7 +299,7 @@ void Customer::sendObj(){
 
 // Funzione che manda una comunicazione di controllo 'no'
 void Customer::sendNoObj(){
-    printf("    SEND on CTRL : NO OBJ\n");
+    //printf("    SEND on CTRL : NO OBJ\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "StopSendingObject");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
@@ -244,7 +307,7 @@ void Customer::sendNoObj(){
 
 // Funzione che manda una comunicazione di controllo 'ro' Requesting Object - Richiesta Catalogo
 void Customer::sendReqObj(){
-    printf("    SEND on CTRL : RICHIESTA CATALOGO\n");
+    //printf("    SEND on CTRL : RICHIESTA CATALOGO\n");
     reply = RedisCommand(c2r, "XADD %s * requestCode %s", CTRL, "RequestCatalog");  //? no - No Obj
     assertReply(c2r, reply);
     freeReplyObject(reply);
@@ -257,3 +320,5 @@ void Customer::addItem(Article article) {
 size_t Customer::getItemCount() const {
     return catalog.size();
 }
+
+

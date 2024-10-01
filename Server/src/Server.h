@@ -14,7 +14,7 @@
 #include <cctype>               // per std::isalnum
 #include <cstring>              // per std::strlen
 #include <sstream>
-#include <iomanip>  // Necessario per std::setw e std::setfill
+#include <iomanip>              // Necessario per std::setw e std::setfill
 
 
 
@@ -32,6 +32,7 @@
 
 #define DB "../../stats/tempDB.csv"
 #define ERR_COMUNICATION "../../stats/Err_Comunication.csv"
+#define LOG_ORD "../../stats/Log_Ord.csv"
 
 #define CTRL "Control_Channel"
 #define OBJ_CH "Object_Channel"
@@ -39,6 +40,7 @@
 #define ORDER_STREAM "order_stream"      // ? Stream di ordini
 #define CUST_W_STREAM "Customer_w_stream"   // Server scrive in questo canale
 #define CUST_R_STREAM "Customer_r_stream"   // Server ascolta in questo canale
+#define ANOMALY_STREAM "Anomaly_Stream"     
 
 enum Server_State {
     ON_CONNECTION,  //$ Fase di connessione (1° Fase)
@@ -56,8 +58,10 @@ class Server {
         bool read = true;                   //TODO Valore temporaneo
         int block = 1000000000;             //TODO Valore che indica l'attendere
         int timedBlock = 10000;             // ? Utilizzato per temporizzare l'attesa
-        std::vector<std::string> intestazioneProduct = {"Product", "Price", "Seller"};
+        std::vector<std::string> intestazioneProduct = {"Timestamp","Product", "Price", "Seller"};
         std::vector<std::string> intestazioneErr_Com = {"User", "Timestamp"};
+        std::vector<std::string> intes_LOG_Ord = {"Timestamp", "User"};
+
 
         std::ofstream file;                 // Stream per il file CSV
 
@@ -73,6 +77,7 @@ class Server {
         size_t getItemCount() const;
         bool checkData(const char product[], const char price[], const char seller[]);
         bool isValidCharArray(const char *str);
+        void creaIntestazione(const std::string& nomeFile, const std::vector<std::string>& intestazione);
 
 
 
@@ -86,8 +91,6 @@ class Server {
         const char* isLessThanOneSecond(std::chrono::high_resolution_clock::time_point start,
                           std::chrono::high_resolution_clock::time_point end);
         void aggiungiRigaAlCSV(const std::string& percorsoFile, const std::vector<std::string>& dati);
-        void creaIntestazione(const std::vector<std::string>& intestazione);
-        void creaIntestazioneErr_Com(const std::vector<std::string>& intestazione);
         //TODO Elimina questa Funzione
         static void printReply(redisReply *reply, int level = 0);
         std::string timestampToString();

@@ -13,6 +13,9 @@
 #define READ_STREAM "Customer_w_stream"     // Server scrive in questo canale
 #define CTRL "Control_Channel"
 #define OBJ_CH "Object_Channel"
+#define DELIVER_STREAM "Customer_Deliver_stream"      // ? Stream di ordini
+#define ANOMALY_STREAM "Anomaly_Stream"
+
 
 
 #define SELLER_STATE_LENGHT 5                   // ? Dimensione dell'Enum degli Stati di Customer
@@ -59,7 +62,9 @@ class Customer{
         void makeDecision();
         void choose_item();
         size_t getItemCount() const;
-        
+        void listenDeliver();
+        void listenAnomalies();
+
         void sendObj();
         void sendNoObj();
         void sendReqObj();

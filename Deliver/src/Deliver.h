@@ -7,14 +7,21 @@
 #include <string>
 #include <list>
 #include <random>
+#include <fstream>              // per gestire file input/output
+#include <chrono>
+#include <iomanip>              // Necessario per std::setw e std::setfill
+
 using namespace std;
 
 #include "main.h"
 #include "con2redis.h"
 
-#define SELLER_STATE_LENGHT 3           // ? Dimensione dell'Enum degli Stati di Seller
-#define READ_STREAM "order_stream"      // ? Stream di ordini
+#define NOT_ACCEPT_ORDER 2                              // ? Probabilità che l'ordine non sia accettato
+#define SELLER_STATE_LENGHT 3                           // ? Dimensione dell'Enum degli Stati di Seller
+#define READ_STREAM "order_stream"                      // ? Stream di ordini
+#define CUSTOMER_STREAM "Customer_Deliver_stream"       // ? Stream di ordini
 
+#define ACC_RIF_DB "../../stats/Acc_Riff_DB.csv"
 
 enum Delivery_state {
     DELIVER_GENERATION,
@@ -28,7 +35,9 @@ class Deliver {
         int pid;
         Delivery_state delivery_state;      // State of the Seller
         string delivery_name;               // Name of the
-        unsigned int myseed;                // random Seed   
+        unsigned int myseed;                // random Seed 
+        std::vector<std::string> intestazioneDeliv = {"Stato", "Product", "Price", "Seller", "Timestamp"};
+  
         
         redisContext *c2r;
         redisReply *reply;
@@ -40,7 +49,11 @@ class Deliver {
         void nextState();
         void connection();
         void onListen();
-        
+        bool acceptedOrder();
+        void creaIntestazione(const std::vector<std::string>& intestazione);
+        void aggiungiRigaAlCSV(const std::string &percorsoFile, const std::vector<std::string> &dati);
+        std::string timestampToString();
+
     public:
         Deliver();
         
