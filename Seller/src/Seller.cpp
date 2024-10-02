@@ -51,6 +51,8 @@ void Seller::processing(){
     case SELLER_GENERATION:
         printf("\n\n*---------------------------------------------------------------------*\nSeller: %s\n",sellerName.c_str());
         nextState();                                                // Set next state
+        usleep(500000);             //Accetta microSecondi 1s=1.000.000 micros | 0.5s=500.000micros
+
         break;
     case LOADING_PRODUCT:
         generateSellerProduct();

@@ -1,101 +1,201 @@
 Timestamp,Product,Price,Seller
-11:18:06,Frigorifero per vino,527,WholesaleWave
-11:18:06,Caricabatterie wireless,568,WholesaleWave
-11:18:06,Pantaloni Yoga,662,WholesaleWave
-11:18:06,Lampade,865,WholesaleWave
-11:18:06,Cover e custodie per telefoni,27,WholesaleWave
-11:18:06,Baby Monitor,558,WholesaleWave
-11:18:06,Friggitrice ad aria,184,WholesaleWave
-11:18:06,Imbracatura Paracadute,572,WholesaleWave
-11:18:06,Scarpe da ginnastica,641,WholesaleWave
-11:18:06,Accessori per orologi,894,WholesaleWave
-11:18:06,Coperte rinfrescanti,960,CommerceHub
-11:18:06,Carne di Orso,915,CommerceHub
-11:18:06,Dispositivi indossabili,24,CommerceHub
-11:18:06,Borraccia Termica,514,CommerceHub
-11:18:06,Pantaloni Yoga,790,CommerceHub
-11:18:06,Baby Monitor,914,CommerceHub
-11:18:06,Treppiedi,104,CommerceHub
-11:18:06,Accessori per orologi,135,CommerceHub
-11:18:06,Lampade,208,CommerceHub
-11:18:06,Scope elettriche,380,CommerceHub
-11:18:06,Imbracatura Paracadute,461,MarketMovers
-11:18:06,Lampade,0,MarketMovers
-11:18:06,Accessori per orologi,532,MarketMovers
-11:18:06,Treppiedi,702,MarketMovers
-11:18:06,Scarpe da ginnastica,164,MarketMovers
-11:18:06,Cover e custodie per telefoni,888,MarketMovers
-11:18:06,Borraccia Termica,97,MarketMovers
-11:18:06,Alimenti per animali domestici,265,MarketMovers
-11:18:06,Baby Monitor,379,MarketMovers
-11:18:06,Coperte rinfrescanti,292,MarketMovers
-11:18:06,Pantaloni Yoga,554,TradeTrail
-11:18:06,Accessori per orologi,126,TradeTrail
-11:18:06,Carne di Orso,403,TradeTrail
-11:18:06,Coperte rinfrescanti,68,TradeTrail
-11:18:06,Imbracatura Paracadute,673,TradeTrail
-11:18:06,Caricabatterie wireless,964,TradeTrail
-11:18:06,Massaggiatore cervicale,824,TradeTrail
-11:18:06,Lampade,548,TradeTrail
-11:18:06,Frigorifero per vino,436,TradeTrail
-11:18:06,Cover e custodie per telefoni,562,TradeTrail
-11:18:06,Coperte rinfrescanti,709,BargainBay
-11:18:06,Alimenti per animali domestici,436,BargainBay
-11:18:06,Lampade,924,BargainBay
-11:18:06,Spazzolini da denti elettronici,402,BargainBay
-11:18:06,Friggitrice ad aria,553,BargainBay
-11:18:06,Baby Monitor,305,BargainBay
-11:18:06,Massaggiatore cervicale,604,BargainBay
-11:18:06,Frigorifero per vino,510,BargainBay
-11:18:06,Dispositivi indossabili,183,BargainBay
-11:18:06,Borraccia Termica,248,BargainBay
-11:18:06,Carne di Orso,293,TreasureTraders
-11:18:06,Caricabatterie wireless,707,TreasureTraders
-11:18:06,Lampade,612,TreasureTraders
-11:18:06,Massaggiatore cervicale,885,TreasureTraders
-11:18:06,Friggitrice ad aria,134,TreasureTraders
-11:18:06,Borraccia Termica,805,TreasureTraders
-11:18:06,Spazzolini da denti elettronici,441,TreasureTraders
-11:18:06,Baby Monitor,687,TreasureTraders
-11:18:06,Alimenti per animali domestici,83,TreasureTraders
-11:18:06,Scarpe da ginnastica,692,TreasureTraders
-11:18:06,Baby Monitor,575,RoveRange
-11:18:06,Treppiedi,832,RoveRange
-11:18:06,Scope elettriche,927,RoveRange
-11:18:06,Carne di Orso,959,RoveRange
-11:18:06,Massaggiatore cervicale,818,RoveRange
-11:18:06,Accessori per orologi,820,RoveRange
-11:18:06,Caricabatterie wireless,382,RoveRange
-11:18:06,Cover e custodie per telefoni,496,RoveRange
-11:18:06,Spazzolini da denti elettronici,859,RoveRange
-11:18:06,Dispositivi indossabili,663,RoveRange
-11:18:06,Caricabatterie wireless,794,StockStream
-11:18:06,Borraccia Termica,17,StockStream
-11:18:06,Coperte rinfrescanti,668,StockStream
-11:18:06,Scarpe da ginnastica,623,StockStream
-11:18:06,Cover e custodie per telefoni,694,StockStream
-11:18:06,Carne di Orso,328,StockStream
-11:18:06,Scope elettriche,487,StockStream
-11:18:06,Treppiedi,116,StockStream
-11:18:06,Frigorifero per vino,873,StockStream
-11:18:06,Alimenti per animali domestici,254,StockStream
-11:18:06,Friggitrice ad aria,292,MerchHaven
-11:18:06,Alimenti per animali domestici,121,MerchHaven
-11:18:06,Spazzolini da denti elettronici,797,MerchHaven
-11:18:06,Accessori per orologi,716,MerchHaven
-11:18:06,Massaggiatore cervicale,276,MerchHaven
-11:18:06,Coperte rinfrescanti,922,MerchHaven
-11:18:06,Pantaloni Yoga,907,MerchHaven
-11:18:06,Caricabatterie wireless,683,MerchHaven
-11:18:06,Frigorifero per vino,88,MerchHaven
-11:18:06,Borraccia Termica,309,MerchHaven
-11:18:06,Imbracatura Paracadute,944,LivingTrade
-11:18:06,Treppiedi,99,LivingTrade
-11:18:06,Alimenti per animali domestici,93,LivingTrade
-11:18:06,Baby Monitor,362,LivingTrade
-11:18:06,Cover e custodie per telefoni,736,LivingTrade
-11:18:06,Frigorifero per vino,365,LivingTrade
-11:18:06,Friggitrice ad aria,924,LivingTrade
-11:18:06,Scope elettriche,549,LivingTrade
-11:18:06,Coperte rinfrescanti,219,LivingTrade
-11:18:06,Borraccia Termica,839,LivingTrade
+11:40:57,Imbracatura Paracadute,484,RoveRange
+11:40:57,Caricabatterie wireless,24,RoveRange
+11:40:57,Treppiedi,119,RoveRange
+11:40:57,Borraccia Termica,523,RoveRange
+11:40:57,Coperte rinfrescanti,97,RoveRange
+11:40:57,Carne di Orso,902,RoveRange
+11:40:57,Scope elettriche,811,RoveRange
+11:40:57,Pantaloni Yoga,588,RoveRange
+11:40:57,Dispositivi indossabili,459,RoveRange
+11:40:57,Frigorifero per vino,775,RoveRange
+11:40:57,Treppiedi,429,MerchHaven
+11:40:57,Lampade,667,MerchHaven
+11:40:57,Baby Monitor,66,MerchHaven
+11:40:57,Dispositivi indossabili,462,MerchHaven
+11:40:57,Massaggiatore cervicale,460,MerchHaven
+11:40:57,Scarpe da ginnastica,26,MerchHaven
+11:40:57,Alimenti per animali domestici,477,MerchHaven
+11:40:57,Pantaloni Yoga,79,MerchHaven
+11:40:57,Cover e custodie per telefoni,831,MerchHaven
+11:40:57,Spazzolini da denti elettronici,728,MerchHaven
+11:40:57,Borraccia Termica,586,StockStream
+11:40:57,Cover e custodie per telefoni,411,StockStream
+11:40:57,Friggitrice ad aria,876,StockStream
+11:40:57,Coperte rinfrescanti,839,StockStream
+11:40:57,Frigorifero per vino,830,StockStream
+11:40:57,Massaggiatore cervicale,27,StockStream
+11:40:57,Scope elettriche,622,StockStream
+11:40:57,Scarpe da ginnastica,849,StockStream
+11:40:57,Caricabatterie wireless,517,StockStream
+11:40:57,Carne di Orso,323,StockStream
+11:40:57,Scope elettriche,952,GoodsGlobe
+11:40:57,Accessori per orologi,374,GoodsGlobe
+11:40:57,Spazzolini da denti elettronici,617,GoodsGlobe
+11:40:57,Treppiedi,639,GoodsGlobe
+11:40:57,Imbracatura Paracadute,642,GoodsGlobe
+11:40:57,Lampade,170,GoodsGlobe
+11:40:57,Caricabatterie wireless,691,GoodsGlobe
+11:40:57,Massaggiatore cervicale,544,GoodsGlobe
+11:40:57,Frigorifero per vino,905,GoodsGlobe
+11:40:57,Baby Monitor,520,GoodsGlobe
+11:40:57,Accessori per orologi,809,MarketMarvels
+11:40:57,Dispositivi indossabili,810,MarketMarvels
+11:40:57,Scarpe da ginnastica,714,MarketMarvels
+11:40:57,Alimenti per animali domestici,591,MarketMarvels
+11:40:57,Frigorifero per vino,857,MarketMarvels
+11:40:57,Borraccia Termica,278,MarketMarvels
+11:40:57,Imbracatura Paracadute,510,MarketMarvels
+11:40:57,Spazzolini da denti elettronici,235,MarketMarvels
+11:40:57,Scope elettriche,308,MarketMarvels
+11:40:57,Treppiedi,364,MarketMarvels
+11:40:57,Baby Monitor,15,RetailRadar
+11:40:57,Treppiedi,274,RetailRadar
+11:40:57,Caricabatterie wireless,464,RetailRadar
+11:40:57,Pantaloni Yoga,647,RetailRadar
+11:40:57,Coperte rinfrescanti,285,RetailRadar
+11:40:57,Scarpe da ginnastica,189,RetailRadar
+11:40:57,Frigorifero per vino,158,RetailRadar
+11:40:57,Dispositivi indossabili,259,RetailRadar
+11:40:57,Spazzolini da denti elettronici,666,RetailRadar
+11:40:57,Accessori per orologi,974,RetailRadar
+11:40:57,Imbracatura Paracadute,520,GoodsGalore
+11:40:57,Cover e custodie per telefoni,307,GoodsGalore
+11:40:57,Caricabatterie wireless,604,GoodsGalore
+11:40:57,Scope elettriche,667,GoodsGalore
+11:40:57,Scarpe da ginnastica,381,GoodsGalore
+11:40:57,Accessori per orologi,953,GoodsGalore
+11:40:57,Dispositivi indossabili,997,GoodsGalore
+11:40:57,Carne di Orso,59,GoodsGalore
+11:40:57,Baby Monitor,848,GoodsGalore
+11:40:57,Coperte rinfrescanti,163,GoodsGalore
+11:40:57,Treppiedi,74,BazaarBounty
+11:40:57,Coperte rinfrescanti,141,BazaarBounty
+11:40:57,Borraccia Termica,215,BazaarBounty
+11:40:57,Accessori per orologi,264,BazaarBounty
+11:40:57,Massaggiatore cervicale,884,BazaarBounty
+11:40:57,Lampade,454,BazaarBounty
+11:40:57,Alimenti per animali domestici,836,BazaarBounty
+11:40:57,Frigorifero per vino,241,BazaarBounty
+11:40:57,Pantaloni Yoga,272,BazaarBounty
+11:40:57,Carne di Orso,331,BazaarBounty
+11:40:57,Frigorifero per vino,524,MerchandiseMart
+11:40:57,Imbracatura Paracadute,427,MerchandiseMart
+11:40:57,Borraccia Termica,278,MerchandiseMart
+11:40:57,Caricabatterie wireless,432,MerchandiseMart
+11:40:57,Friggitrice ad aria,318,MerchandiseMart
+11:40:57,Spazzolini da denti elettronici,400,MerchandiseMart
+11:40:57,Alimenti per animali domestici,615,MerchandiseMart
+11:40:57,Coperte rinfrescanti,629,MerchandiseMart
+11:40:57,Scarpe da ginnastica,920,MerchandiseMart
+11:40:57,Accessori per orologi,364,MerchandiseMart
+11:40:57,Spazzolini da denti elettronici,924,LivingTrade
+11:40:57,Cover e custodie per telefoni,609,LivingTrade
+11:40:57,Dispositivi indossabili,967,LivingTrade
+11:40:57,Imbracatura Paracadute,543,LivingTrade
+11:40:57,Lampade,804,LivingTrade
+11:40:57,Scarpe da ginnastica,464,LivingTrade
+11:40:57,Friggitrice ad aria,536,LivingTrade
+11:40:57,Coperte rinfrescanti,246,LivingTrade
+11:40:57,Caricabatterie wireless,32,LivingTrade
+11:40:57,Treppiedi,342,LivingTrade
+11:45:42,Frigorifero per vino,256,LivingTrade
+11:45:42,Borraccia Termica,818,LivingTrade
+11:45:42,Massaggiatore cervicale,434,LivingTrade
+11:45:42,Lampade,772,LivingTrade
+11:45:42,Carne di Orso,292,LivingTrade
+11:45:42,Scope elettriche,501,LivingTrade
+11:45:42,Dispositivi indossabili,510,LivingTrade
+11:45:42,Imbracatura Paracadute,482,LivingTrade
+11:45:42,Caricabatterie wireless,79,LivingTrade
+11:45:42,Cover e custodie per telefoni,60,LivingTrade
+11:45:42,Dispositivi indossabili,836,MarketMarvels
+11:45:42,Imbracatura Paracadute,354,MarketMarvels
+11:45:42,Lampade,595,MarketMarvels
+11:45:42,Friggitrice ad aria,705,MarketMarvels
+11:45:42,Coperte rinfrescanti,2,MarketMarvels
+11:45:42,Alimenti per animali domestici,864,MarketMarvels
+11:45:42,Scarpe da ginnastica,760,MarketMarvels
+11:45:43,Scope elettriche,743,MarketMarvels
+11:45:43,Caricabatterie wireless,177,MarketMarvels
+11:45:43,Spazzolini da denti elettronici,262,MarketMarvels
+11:45:43,Caricabatterie wireless,26,SupplySquare
+11:45:43,Baby Monitor,758,SupplySquare
+11:45:43,Pantaloni Yoga,866,SupplySquare
+11:45:43,Frigorifero per vino,348,SupplySquare
+11:45:43,Scarpe da ginnastica,78,SupplySquare
+11:45:43,Imbracatura Paracadute,372,SupplySquare
+11:45:43,Accessori per orologi,768,SupplySquare
+11:45:43,Borraccia Termica,215,SupplySquare
+11:45:43,Carne di Orso,820,SupplySquare
+11:45:43,Scope elettriche,269,SupplySquare
+11:45:43,Scope elettriche,844,TradeTreasures
+11:45:43,Treppiedi,278,TradeTreasures
+11:45:43,Dispositivi indossabili,353,TradeTreasures
+11:45:44,Pantaloni Yoga,973,TradeTreasures
+11:45:44,Cover e custodie per telefoni,4,TradeTreasures
+11:45:44,Massaggiatore cervicale,844,TradeTreasures
+11:45:44,Coperte rinfrescanti,192,TradeTreasures
+11:45:44,Spazzolini da denti elettronici,519,TradeTreasures
+11:45:44,Frigorifero per vino,13,TradeTreasures
+11:45:44,Carne di Orso,723,TradeTreasures
+11:45:44,Carne di Orso,291,WholesaleWave
+11:45:44,Pantaloni Yoga,686,WholesaleWave
+11:45:44,Massaggiatore cervicale,782,WholesaleWave
+11:45:44,Caricabatterie wireless,739,WholesaleWave
+11:45:44,Frigorifero per vino,34,WholesaleWave
+11:45:44,Cover e custodie per telefoni,665,WholesaleWave
+11:45:44,Alimenti per animali domestici,328,WholesaleWave
+11:45:44,Accessori per orologi,22,WholesaleWave
+11:45:44,Spazzolini da denti elettronici,865,WholesaleWave
+11:45:44,Scarpe da ginnastica,56,WholesaleWave
+11:45:44,Spazzolini da denti elettronici,454,RoveRange
+11:45:45,Friggitrice ad aria,928,RoveRange
+11:45:45,Dispositivi indossabili,744,RoveRange
+11:45:45,Baby Monitor,626,RoveRange
+11:45:45,Frigorifero per vino,880,RoveRange
+11:45:45,Accessori per orologi,556,RoveRange
+11:45:45,Massaggiatore cervicale,383,RoveRange
+11:45:45,Alimenti per animali domestici,417,RoveRange
+11:45:45,Carne di Orso,494,RoveRange
+11:45:45,Caricabatterie wireless,629,RoveRange
+11:45:45,Caricabatterie wireless,838,MarketMovers
+11:45:45,Alimenti per animali domestici,240,MarketMovers
+11:45:45,Friggitrice ad aria,613,MarketMovers
+11:45:45,Carne di Orso,448,MarketMovers
+11:45:45,Scarpe da ginnastica,629,MarketMovers
+11:45:45,Cover e custodie per telefoni,144,MarketMovers
+11:45:45,Borraccia Termica,232,MarketMovers
+11:45:45,Dispositivi indossabili,697,MarketMovers
+11:45:45,Baby Monitor,787,MarketMovers
+11:45:45,Massaggiatore cervicale,239,MarketMovers
+11:45:46,Spazzolini da denti elettronici,614,TradeTrail
+11:45:46,Lampade,406,TradeTrail
+11:45:46,Baby Monitor,274,TradeTrail
+11:45:46,Coperte rinfrescanti,666,TradeTrail
+11:45:46,Scarpe da ginnastica,466,TradeTrail
+11:45:46,Treppiedi,785,TradeTrail
+11:45:46,Borraccia Termica,101,TradeTrail
+11:45:46,Cover e custodie per telefoni,865,TradeTrail
+11:45:46,Accessori per orologi,755,TradeTrail
+11:45:46,Frigorifero per vino,570,TradeTrail
+11:45:46,Scarpe da ginnastica,974,BazaarBounty
+11:45:46,Lampade,399,BazaarBounty
+11:45:46,Imbracatura Paracadute,888,BazaarBounty
+11:45:46,Alimenti per animali domestici,831,BazaarBounty
+11:45:46,Massaggiatore cervicale,824,BazaarBounty
+11:45:46,Borraccia Termica,71,BazaarBounty
+11:45:46,Carne di Orso,516,BazaarBounty
+11:45:46,Treppiedi,630,BazaarBounty
+11:45:46,Caricabatterie wireless,516,BazaarBounty
+11:45:46,Accessori per orologi,544,BazaarBounty
+11:45:47,Coperte rinfrescanti,330,TreasureTraders
+11:45:47,Cover e custodie per telefoni,591,TreasureTraders
+11:45:47,Massaggiatore cervicale,213,TreasureTraders
+11:45:47,Borraccia Termica,314,TreasureTraders
+11:45:47,Dispositivi indossabili,615,TreasureTraders
+11:45:47,Treppiedi,136,TreasureTraders
+11:45:47,Baby Monitor,713,TreasureTraders
+11:45:47,Scarpe da ginnastica,254,TreasureTraders
+11:45:47,Caricabatterie wireless,137,TreasureTraders
+11:45:47,Accessori per orologi,76,TreasureTraders

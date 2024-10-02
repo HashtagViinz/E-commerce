@@ -11,6 +11,8 @@ Server::Server() {
     creaIntestazione(DB, intestazioneProduct);
     creaIntestazione(ERR_COMUNICATION, intestazioneErr_Com);
     creaIntestazione(LOG_ORD, intes_LOG_Ord);
+    creaIntestazione(LOG_DELAY, intes_LOG_Delay);
+
 
     printf("Hello I'm Alive :D\n\n");
 
@@ -148,13 +150,13 @@ void Server::listenCustomer(){
 
     printf("Attesa cliente...");
 
-    //! Mandiamo il catalogo al Seller
+    //! SEZIONE : catalogo al Client
     reply = RedisCommand(c2r, "XREADGROUP GROUP diameter Tom BLOCK %d COUNT 1 STREAMS %s >", 
                           block, CTRL);
-                          
-    auto start = std::chrono::high_resolution_clock::now(); 
 
-    std::vector<std::string> obj = {timestampToString(), "1"};    // $ Ci salviamo le informazioni come vettore di stringhe
+    auto start = std::chrono::high_resolution_clock::now();
+
+    std::vector<std::string> obj = {timestampToString()};    // $ LOG Richiesta Catalogo
     aggiungiRigaAlCSV(LOG_ORD, obj);
     
     assertReply(c2r, reply);                                // Verifica errori nella comunicazione
@@ -167,7 +169,6 @@ void Server::listenCustomer(){
         sleep(delay);                                       // ? Genero un ritardo Randomico
 
         for (Item i : available_Items){
-
             // Recupera i valori dai getter
             string name = i.getName();
             string price = i.getPrice();
@@ -181,6 +182,10 @@ void Server::listenCustomer(){
     }
 
     auto end = std::chrono::high_resolution_clock::now();   //! timestamp end
+    
+    obj = {convertTimeToString(start), doubleToString(durationInSeconds(start, end))};    // $ LOG Ritardi
+    aggiungiRigaAlCSV(LOG_DELAY, obj);
+
     printf("#RITARDO: %s %f | DELAY: %d\n",isLessThanOneSecond(start, end), durationInSeconds(start, end), delay);
     printf("# Catalog sended...\n");    
 
@@ -227,17 +232,18 @@ void Server::listenCustomer(){
             // ! Controllo Anomalia
             if(checkData(product, price, seller)){         
                 printf("Sto mandando in CTRL : ANOMALY\n");
-                reply = RedisCommand(c2r, "XADD %s * requestCode %s", ANOMALY_STREAM, "ANOMALY"); // $ Comunichiamo che abbiamo trovato un'anomalia
+                reply = RedisCommand(c2r, "XADD %s * requestCode %s", ANOMALY_STREAM, "ANOMALY"); // Comunichiamo che abbiamo trovato un'anomalia
                 assertReply(c2r, reply);
                 freeReplyObject(reply); 
 
                 std::vector<std::string> obj = {user, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
                 aggiungiRigaAlCSV(ERR_COMUNICATION, obj);
+                
                 printf("#ANOMALIA di %s\n", user);
                 continue;
             }
             printf("Sto mandando in CTRL : NO_ANOMALY\n");
-            reply = RedisCommand(c2r, "XADD %s * requestCode %s", ANOMALY_STREAM, "NO_ANOMALY");  // $ Comunichiamo che non c'è nessuna anomalia
+            reply = RedisCommand(c2r, "XADD %s * requestCode %s", ANOMALY_STREAM, "NO_ANOMALY");  //  Comunichiamo che non c'è nessuna anomalia
             assertReply(c2r, reply);
             freeReplyObject(reply); 
 
@@ -333,6 +339,28 @@ std::string Server::timestampToString() {
     return time_stream.str();
 }
 
+std::string Server::convertTimeToString(const std::chrono::high_resolution_clock::time_point &timePoint){
+    // Converti il time_point in time_t che rappresenta il tempo in secondi
+    std::time_t timeT = std::chrono::system_clock::to_time_t(timePoint);
+    
+    // Usa std::localtime per convertire in una struttura tm (data/ora locale)
+    std::tm* tm = std::localtime(&timeT);
+    
+    // Usa un std::stringstream per formattare la data/ora
+    std::stringstream ss;
+    ss << std::put_time(tm, "%Y-%m-%d %H:%M:%S");  // Formato data-ora
+
+    return ss.str();  // Ritorna la stringa formattata
+}
+
+std::string Server::doubleToString(double numero, int precisione){
+    std::ostringstream stream;
+    stream.precision(precisione);  // Imposta la precisione per il numero di cifre decimali
+    stream << std::fixed << numero;  // Usa std::fixed per mantenere la notazione decimale
+
+    return stream.str();  // Ritorna la stringa
+}
+
 // Funzione che stampa gli items
 void Server::getAvailable_Items() {
     for (Item i : available_Items){
@@ -403,8 +431,7 @@ bool Server::checkData(const char product[], const char price[], const char sell
            isValidCharArray(seller);
 }
 
-bool Server::isValidCharArray(const char *str)
-{   
-    return strcmp(str, " ") == 0 || strcmp(str, "") == 0; 
-    
+bool Server::isValidCharArray(const char *str){   
+    return strcmp(str, " ") == 0 || strcmp(str, "") == 0;    
 }
+

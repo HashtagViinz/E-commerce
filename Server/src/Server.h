@@ -20,6 +20,7 @@
 
 
 
+
 // Comunicazione redis
 #include "con2redis.h"          //Includiamo l'interfaccia di con2redis
 
@@ -27,12 +28,13 @@
 #include "Item.h"
 
 #define SERVER_MAX_ITEMS 100
-#define LIFE_STEPS 500          // indichiamo i passi di vita del Server
+#define LIFE_STEPS 1000          // indichiamo i passi di vita del Server
 #define CHECK_DELAY 1           // valore di controllo del ritardo
 
 #define DB "../../stats/tempDB.csv"
 #define ERR_COMUNICATION "../../stats/Err_Comunication.csv"
-#define LOG_ORD "../../stats/Log_Ord.csv"
+#define LOG_ORD "../../stats/Log_Catalog.csv"
+#define LOG_DELAY "../../stats/LOG_Delay.csv"
 
 #define CTRL "Control_Channel"
 #define OBJ_CH "Object_Channel"
@@ -60,7 +62,9 @@ class Server {
         int timedBlock = 10000;             // ? Utilizzato per temporizzare l'attesa
         std::vector<std::string> intestazioneProduct = {"Timestamp","Product", "Price", "Seller"};
         std::vector<std::string> intestazioneErr_Com = {"User", "Timestamp"};
-        std::vector<std::string> intes_LOG_Ord = {"Timestamp", "User"};
+        std::vector<std::string> intes_LOG_Ord = {"Timestamp"};
+        std::vector<std::string> intes_LOG_Delay = {"start", "delay"};
+
 
 
         std::ofstream file;                 // Stream per il file CSV
@@ -94,8 +98,8 @@ class Server {
         //TODO Elimina questa Funzione
         static void printReply(redisReply *reply, int level = 0);
         std::string timestampToString();
-
-
+        std::string convertTimeToString(const std::chrono::high_resolution_clock::time_point& timePoint);
+        std::string doubleToString(double numero, int precisione = 6);
 
 };
 
