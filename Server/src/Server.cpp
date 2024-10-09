@@ -12,7 +12,7 @@ Server::Server() {
     creaIntestazione(ERR_COMUNICATION, intestazioneErr_Com);
     creaIntestazione(LOG_ORD, intes_LOG_Ord);
     creaIntestazione(LOG_DELAY, intes_LOG_Delay);
-
+    creaIntestazione(ORDINI_RICEVUTI_TOT, intes_LOG_ORDTOT);
 
     printf("Hello I'm Alive :D\n\n");
 
@@ -178,6 +178,7 @@ void Server::listenCustomer(){
             assertReply(c2r, reply);
             //printf("Server sta mandando : %s %s %s\n", name.c_str(), price.c_str(), seller.c_str());
             freeReplyObject(reply);
+
         }
     }
 
@@ -228,6 +229,9 @@ void Server::listenCustomer(){
             ReadStreamMsgVal(reply, 0, 0, 5, seller);
             ReadStreamMsgVal(reply, 0, 0, 7, user);
             freeReplyObject(reply);
+
+            obj = {timestampToString()};    // $ LOG ORDINI TOT RICEVUTI
+            aggiungiRigaAlCSV(ORDINI_RICEVUTI_TOT, obj);
 
             // ! Controllo Anomalia
             if(checkData(product, price, seller)){         

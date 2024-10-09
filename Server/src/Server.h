@@ -28,13 +28,16 @@
 #include "Item.h"
 
 #define SERVER_MAX_ITEMS 100
-#define LIFE_STEPS 1000          // indichiamo i passi di vita del Server
+#define LIFE_STEPS 10000          // indichiamo i passi di vita del Server
 #define CHECK_DELAY 1           // valore di controllo del ritardo
 
-#define DB "../../stats/tempDB.csv"
+#define DB "../../stats/Product.csv"
 #define ERR_COMUNICATION "../../stats/Err_Comunication.csv"
 #define LOG_ORD "../../stats/Log_Catalog.csv"
 #define LOG_DELAY "../../stats/LOG_Delay.csv"
+#define ORDINE "../../stats/Ordini.csv"
+#define ORDINI_RICEVUTI_TOT "../../stats/OrdiniRicevutiTot.csv"
+
 
 #define CTRL "Control_Channel"
 #define OBJ_CH "Object_Channel"
@@ -64,6 +67,7 @@ class Server {
         std::vector<std::string> intestazioneErr_Com = {"User", "Timestamp"};
         std::vector<std::string> intes_LOG_Ord = {"Timestamp"};
         std::vector<std::string> intes_LOG_Delay = {"start", "delay"};
+        std::vector<std::string> intes_LOG_ORDTOT = {"Timestamp"};
 
 
 

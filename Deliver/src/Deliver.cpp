@@ -109,8 +109,8 @@ void Deliver::onListen(){
             assertReply(c2r, reply);
             freeReplyObject(reply);
 
-            std::vector<std::string> obj = {"RIFIUTATO",product, price, seller, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
-            aggiungiRigaAlCSV(ACC_RIF_DB, obj);
+            saveData(ACC_RIF_DB,"RIFIUTATO",product, price, seller, user,timestampToString());
+
         }
         else{
             printf("# ORDINE ACCETTATO :(%s,%s,%s,%s)\n", product, price, seller, user);
@@ -118,8 +118,7 @@ void Deliver::onListen(){
             assertReply(c2r, reply);
             freeReplyObject(reply);
 
-            std::vector<std::string> obj = {"ACCETTATO",product, price, seller, timestampToString()};    // $ Ci salviamo le informazioni come vettore di stringhe
-            aggiungiRigaAlCSV(ACC_RIF_DB, obj);
+            saveData(ACC_RIF_DB, "ACCETTATO",product, price, seller, user,timestampToString());
         }
         // Pulisco i valori dei buffer
         memset(product, 0, sizeof(product));
@@ -127,8 +126,13 @@ void Deliver::onListen(){
         memset(seller, 0, sizeof(seller));
         memset(seller, 0, sizeof(user));
     }
-
 }   
+
+void Deliver::saveData(string DB,string stato, string product, string price, 
+                                            string seller, string user,string time){
+    std::vector<std::string> obj = {stato,product, price, seller, user, time};    // $ Ci salviamo le informazioni come vettore di stringhe
+    aggiungiRigaAlCSV(DB, obj);
+}
 
 bool Deliver::acceptedOrder(){
     return (rand() %10 +1) <= NOT_ACCEPT_ORDER;

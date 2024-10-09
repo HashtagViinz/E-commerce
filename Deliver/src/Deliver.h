@@ -21,7 +21,7 @@ using namespace std;
 #define READ_STREAM "order_stream"                      // ? Stream di ordini
 #define CUSTOMER_STREAM "Customer_Deliver_stream"       // ? Stream di ordini
 
-#define ACC_RIF_DB "../../stats/Acc_Riff_DB.csv"
+#define ACC_RIF_DB "../../stats/Ordine.csv"
 
 enum Delivery_state {
     DELIVER_GENERATION,
@@ -36,7 +36,7 @@ class Deliver {
         Delivery_state delivery_state;      // State of the Seller
         string delivery_name;               // Name of the
         unsigned int myseed;                // random Seed 
-        std::vector<std::string> intestazioneDeliv = {"Stato", "Product", "Price", "Seller", "Timestamp"};
+        std::vector<std::string> intestazioneDeliv = {"Stato", "Product", "Price", "Seller", "User", "Timestamp"};
   
         
         redisContext *c2r;
@@ -53,6 +53,7 @@ class Deliver {
         void creaIntestazione(const std::vector<std::string>& intestazione);
         void aggiungiRigaAlCSV(const std::string &percorsoFile, const std::vector<std::string> &dati);
         std::string timestampToString();
+        void saveData(string DB, string stato, string product, string price, string seller, string user,string time);
 
     public:
         Deliver();
